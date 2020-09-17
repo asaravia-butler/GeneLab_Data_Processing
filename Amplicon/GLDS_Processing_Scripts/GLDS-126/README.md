@@ -1,5 +1,5 @@
 # GeneLab processing code for GLDS-126
-This dataset was processed with [GL-DPPD-7104-A](https://developer.nasa.gov/asaravia/GeneLab_Data_Processing/blob/master/Amplicon/GL-DPPD-7104-A.md).
+This dataset was processed with [GL-DPPD-7104-A](https://github.com/asaravia-butler/GeneLab_Data_Processing/blob/master/Amplicon/GL-DPPD-7104-A.md).
 
 The raw and processed data are available from: [https://genelab-data.ndc.nasa.gov/genelab/accession/GLDS-126/](https://genelab-data.ndc.nasa.gov/genelab/accession/GLDS-126/)
 
