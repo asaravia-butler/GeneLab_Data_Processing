@@ -9,7 +9,7 @@
 **Document Number:** GL-DPPD-7101-C  
 
 **Submitted by:**  
-Amanda Saravia-Butler (GeneLab Analysis Team)
+Amanda Saravia-Butler (GeneLab Data Processing Team)
 
 **Approved by:**  
 Sylvain Costes (GeneLab Project Manager)  
