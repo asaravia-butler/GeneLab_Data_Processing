@@ -213,7 +213,7 @@ rule run_gtdbtk_on_MAGs:
 rule filtering_checkm_results_and_copying_MAGs:
     """ 
     Filters checkm results based on est. completion, redundancy, and strain heterogeneity set in 'config.yaml'
-    Defaults are conservatively 90, 10, and 50
+    Defaults are conservatively 90, 10, and 0
     """
 
     input:
@@ -285,7 +285,7 @@ rule generate_bins_overview_table:
             # combining
             paste {input.assembly_summaries} {params.checkm_w_header_tmp} > {output}
 
-            rm -rf {params.checkm_tmp} {params.checkm_w_header_tmp} {input}
+            rm -rf {params.checkm_tmp} {params.checkm_w_header_tmp} {input.assembly_summaries} {input.checkm_results}
 
         else
 
@@ -382,13 +382,23 @@ rule metabat_binning:
         config["logs_dir"] + "{ID}-bam-summarize-and-metabat.log"
     shell:
         """
-        jgi_summarize_bam_contig_depths --outputDepth {output.depth_file} --percentIdentity 97 --minContigLength 1000 --minContigDepth 1.0  --referenceFasta {input.assembly} {input.bam} > {log} 2>&1
+        # only running if the assembly produced anything
+        if [ -s {input.assembly} ]; then
 
-        # only running if there are contigs with coverage information in the coverage file we just generated
-        if [ $(wc -l {output.depth_file} | cut -f 1 -d " ") -gt 1 ]; then 
-            metabat2  --inFile {input.assembly} --outFile {params.prefix} --abdFile {output.depth_file} -t {params.num_threads} > {log} 2>&1
+            jgi_summarize_bam_contig_depths --outputDepth {output.depth_file} --percentIdentity 97 --minContigLength 1000 --minContigDepth 1.0  --referenceFasta {input.assembly} {input.bam} > {log} 2>&1
+
+            # only running if there are contigs with coverage information in the coverage file we just generated
+            if [ $(wc -l {output.depth_file} | cut -f 1 -d " ") -gt 1 ]; then 
+                metabat2  --inFile {input.assembly} --outFile {params.prefix} --abdFile {output.depth_file} -t {params.num_threads} > {log} 2>&1
+            else
+                printf "\n\nThere was no coverage info generated in {output.depth_file}, so no binning with metabat was performed.\n\n" > {log}
+            fi
+
         else
-            printf "\n\nThere was no coverage info generated in {output.depth_file}, so no binning with metabat was performed.\n\n" > {log}
+
+            touch {output}
+            printf "Binning not performed because the assembly didn't produce anything.\n" > {log}
+
         fi
         """
 
@@ -607,16 +617,26 @@ rule combine_contig_tax_and_coverage:
         cov = config["mapping_dir"] + "{ID}-contig-coverages.tsv",
         tax = config["annotations_and_tax_dir"] + "{ID}-contig-tax.tsv"
     params:
+        assembly = config["assemblies_dir"] + "{ID}-assembly.fasta",
         contig_tmp = config["annotations_and_tax_dir"] + "{ID}-contig.tmp",
         header_tmp = config["annotations_and_tax_dir"] + "{ID}-contig-header.tmp"
     output:
         config["annotations_and_tax_dir"] + "{ID}-contig-coverage-and-tax.tsv"
     shell:
         """
-        paste <( tail -n +2 {input.cov} | sort -V -k 1 ) <( tail -n +2 {input.tax} | sort -V -k 1 | cut -f 2- ) > {params.contig_tmp}
-        paste <( head -n 1 {input.cov} ) <( head -n 1 {input.tax} | cut -f 2- ) > {params.header_tmp}
-        cat {params.header_tmp} {params.contig_tmp} > {output}
-        rm {params} {input}
+        # only running if the assembly produced anything
+        if [ -s {params.assembly} ]; then
+
+            paste <( tail -n +2 {input.cov} | sort -V -k 1 ) <( tail -n +2 {input.tax} | sort -V -k 1 | cut -f 2- ) > {params.contig_tmp}
+            paste <( head -n 1 {input.cov} ) <( head -n 1 {input.tax} | cut -f 2- ) > {params.header_tmp}
+            cat {params.header_tmp} {params.contig_tmp} > {output}
+            rm {params.contig_tmp} {params.header_tmp} {input}
+
+        else
+
+            printf "contig_ID\tcoverage\ttaxid\tdomain\tphylum\tclass\torder\tfamily\tgenus\tspecies\n" > {output}
+
+        fi
         """
 
 
@@ -629,18 +649,28 @@ rule combine_gene_annots_tax_and_coverage:
         annots = config["annotations_and_tax_dir"] + "{ID}-annotations.tsv",
         tax = config["annotations_and_tax_dir"] + "{ID}-gene-tax.tsv"
     params:
+        assembly = config["assemblies_dir"] + "{ID}-assembly.fasta",
         gene_tmp = config["annotations_and_tax_dir"] + "{ID}-gene.tmp",
         header_tmp = config["annotations_and_tax_dir"] + "{ID}-gene-header.tmp"
     output:
         config["annotations_and_tax_dir"] + "{ID}-gene-coverage-annotation-and-tax.tsv"
     shell:
         """
-        paste <( tail -n +2 {input.cov} | sort -V -k 1 ) <( tail -n +2 {input.annots} | sort -V -k 1 | cut -f 2- ) <( tail -n +2 {input.tax} | sort -V -k 1 | cut -f 2- ) > {params.gene_tmp}
-        paste <( head -n 1 {input.cov} ) <( head -n 1 {input.annots} | cut -f 2- ) <( head -n 1 {input.tax} | cut -f 2- ) > {params.header_tmp}
+        # only running if the assembly produced anything
+        if [ -s {params.assembly} ]; then
 
-        cat {params.header_tmp} {params.gene_tmp} > {output}
+            paste <( tail -n +2 {input.cov} | sort -V -k 1 ) <( tail -n +2 {input.annots} | sort -V -k 1 | cut -f 2- ) <( tail -n +2 {input.tax} | sort -V -k 1 | cut -f 2- ) > {params.gene_tmp}
+            paste <( head -n 1 {input.cov} ) <( head -n 1 {input.annots} | cut -f 2- ) <( head -n 1 {input.tax} | cut -f 2- ) > {params.header_tmp}
 
-        rm {params} {input}
+            cat {params.header_tmp} {params.gene_tmp} > {output}
+
+            rm {params.gene_tmp} {params.header_tmp} {input}
+
+        else
+
+            printf "gene_ID\tcoverage\tKO_ID\tKO_function\ttaxid\tdomain\tphylum\tclass\torder\tfamily\tgenus\tspecies\n" > {output}
+
+        fi
         """
 
 
@@ -656,6 +686,7 @@ rule get_cov_and_det:
         bam = config["mapping_dir"] + "{ID}.bam",
         nt = config["genes_dir"] + "{ID}-genes.fasta"
     params:
+        assembly = config["assemblies_dir"] + "{ID}-assembly.fasta",
         gene_cov_and_det_tmp = config["mapping_dir"] + "{ID}-gene-cov-and-det.tmp",
         contig_cov_and_det_tmp = config["mapping_dir"] + "{ID}-contig-cov-and-det.tmp",
         gene_cov_tmp = config["mapping_dir"] + "{ID}-gene-cov.tmp",
@@ -667,19 +698,30 @@ rule get_cov_and_det:
         config["logs_dir"] + "{ID}-pileup.log"
     shell:
         """
-        pileup.sh -in {input.bam} fastaorf={input.nt} outorf={params.gene_cov_and_det_tmp} out={params.contig_cov_and_det_tmp} > {log} 2>&1
+        # only running if the assembly produced anything
+        if [ -s {params.assembly} ]; then
 
-        # filtering coverages based on detection
-            # genes
-        grep -v "#" {params.gene_cov_and_det_tmp} | awk -F $'\t' ' BEGIN {{OFS=FS}} {{ if ( $10 <= 0.5 ) $4 = 0 }} {{ print $1,$4 }} ' > {params.gene_cov_tmp}
-        cat <( printf "gene_ID\tcoverage\n" ) {params.gene_cov_tmp} > {output.gene_covs}
+            pileup.sh -in {input.bam} fastaorf={input.nt} outorf={params.gene_cov_and_det_tmp} out={params.contig_cov_and_det_tmp} > {log} 2>&1
 
-            # contigs
-        grep -v "#" {params.contig_cov_and_det_tmp} | awk -F $'\t' ' BEGIN {{OFS=FS}} {{ if ( $5 <= 50 ) $2 = 0 }} {{ print $1,$2 }} ' > {params.contig_cov_tmp}
-        cat <( printf "contig_ID\tcoverage\n" ) {params.contig_cov_tmp} > {output.contig_covs}
+            # filtering coverages based on detection
+                # genes
+            grep -v "#" {params.gene_cov_and_det_tmp} | awk -F $'\t' ' BEGIN {{OFS=FS}} {{ if ( $10 <= 0.5 ) $4 = 0 }} {{ print $1,$4 }} ' > {params.gene_cov_tmp}
+            cat <( printf "gene_ID\tcoverage\n" ) {params.gene_cov_tmp} > {output.gene_covs}
 
-        # removing intermediate files
-        rm {params}
+                # contigs
+            grep -v "#" {params.contig_cov_and_det_tmp} | awk -F $'\t' ' BEGIN {{OFS=FS}} {{ if ( $5 <= 50 ) $2 = 0 }} {{ print $1,$2 }} ' > {params.contig_cov_tmp}
+            cat <( printf "contig_ID\tcoverage\n" ) {params.contig_cov_tmp} > {output.contig_covs}
+
+            # removing intermediate files
+            rm {params.gene_cov_and_det_tmp} {params.contig_cov_and_det_tmp} {params.gene_cov_tmp} {params.contig_cov_tmp}
+
+        else
+
+            printf "gene_ID\tcoverage\n" > {output.gene_covs}
+            printf "contig_ID\tcoverage\n" > {output.contig_covs}
+            printf "Coverage info not recovered because the assembly didn't produce anything.\n" > {log}
+
+        fi
         """
 
 
@@ -703,10 +745,19 @@ rule run_mapping:
         config["logs_dir"] + "{ID}-bowtie2-build.log"
     shell:
         """
-        bowtie2-build {input.assembly} {params.index} > {log} 2>&1
-        bowtie2 --mm -q --threads {params.num_threads} -x {params.index} -1 {input.R1} -2 {input.R2} --no-unal 2> {params.mapping_info} | samtools view -b | samtools sort -@ {params.num_threads} > {output} 2> /dev/null
+        # only running if the assembly produced anything
+        if [ -s {input.assembly} ]; then
 
-        rm {params.index}*
+            bowtie2-build {input.assembly} {params.index} > {log} 2>&1
+            bowtie2 --mm -q --threads {params.num_threads} -x {params.index} -1 {input.R1} -2 {input.R2} --no-unal 2> {params.mapping_info} | samtools view -b | samtools sort -@ {params.num_threads} > {output} 2> /dev/null
+            rm {params.index}*
+
+        else
+
+            touch {output}
+            printf "Mapping not performed because the assembly didn't produce anything.\n" > {log}
+
+        fi
         """
 
 
@@ -735,21 +786,31 @@ rule run_tax_classification:
         config["logs_dir"] + "{ID}-CAT.log"
     shell:
         """
-        CAT contigs -d {params.cat_db} -t {params.cat_tax} -n {params.num_cpus} -r 3 --top 4 --I_know_what_Im_doing -c {input.assembly} -p {input.AA} -o {params.tmp_out_prefix} --no_stars --block_size 4 --index_chunks 2 --force > {log} 2>&1
+        # only running if assembly produced any contigs
+        if [ -s {input.assembly} ]; then
 
-        # adding names to gene classifications
-        CAT add_names -i {params.tmp_out_prefix}.ORF2LCA.txt -o {params.tmp_genes} -t {params.cat_tax} --only_official --exclude_scores > {log} 2>&1
+            CAT contigs -d {params.cat_db} -t {params.cat_tax} -n {params.num_cpus} -r 3 --top 4 --I_know_what_Im_doing -c {input.assembly} -p {input.AA} -o {params.tmp_out_prefix} --no_stars --block_size 4 --index_chunks 2 --force > {log} 2>&1
 
-        # formatting gene classifications
-        bash scripts/format-gene-tax-classifications.sh {params.tmp_genes} {output.gene_tax_out}
+            # adding names to gene classifications
+            CAT add_names -i {params.tmp_out_prefix}.ORF2LCA.txt -o {params.tmp_genes} -t {params.cat_tax} --only_official --exclude_scores > {log} 2>&1
 
-        # adding names to contig classifications
-        CAT add_names -i {params.tmp_out_prefix}.contig2classification.txt -o {params.tmp_contigs} -t {params.cat_tax} --only_official --exclude_scores > {log} 2>&1
+            # formatting gene classifications
+            bash scripts/format-gene-tax-classifications.sh {params.tmp_genes} {output.gene_tax_out}
 
-        # formatting contig classifications
-        bash scripts/format-contig-tax-classifications.sh {params.tmp_contigs} {output.contig_tax_out}
+            # adding names to contig classifications
+            CAT add_names -i {params.tmp_out_prefix}.contig2classification.txt -o {params.tmp_contigs} -t {params.cat_tax} --only_official --exclude_scores > {log} 2>&1
 
-        rm -rf {params.tmp_out_prefix}* {params.tmp_genes} {params.tmp_contigs} 
+            # formatting contig classifications
+            bash scripts/format-contig-tax-classifications.sh {params.tmp_contigs} {output.contig_tax_out}
+
+            rm -rf {params.tmp_out_prefix}* {params.tmp_genes} {params.tmp_contigs}
+
+        else
+
+            touch {output}
+            printf "Assembly-based taxonomic classification not performed because the assembly didn't produce anything.\n" > {log}
+
+        fi
         """
 
 
@@ -765,6 +826,7 @@ rule run_KO_annotation:
     output:
         config["annotations_and_tax_dir"] + "{ID}-annotations.tsv"
     params:
+        assembly = config["assemblies_dir"] + "{ID}-assembly.fasta",
         ko_db_dir = config["REF_DB_ROOT_DIR"] + config["KOFAMSCAN_DIR"],
         tmp_out = config["annotations_and_tax_dir"] + "{ID}-KO-tab.tmp",
         tmp_dir = config["annotations_and_tax_dir"] + "{ID}-tmp-KO-dir",
@@ -773,11 +835,21 @@ rule run_KO_annotation:
         config["logs_dir"] + "{ID}-kofamscan.log"
     shell:
         """
-        exec_annotation -p {params.ko_db_dir}/profiles/ -k {params.ko_db_dir}/ko_list --cpu {params.num_cpus} -f detail-tsv -o {params.tmp_out} --tmp-dir {params.tmp_dir} --report-unannotated {input.AAs} > {log} 2>&1
+        # only running if assembly produced any contigs
+        if [ -s {params.assembly} ]; then
 
-        bit-filter-KOFamScan-results -i {params.tmp_out} -o {output}
+            exec_annotation -p {params.ko_db_dir}/profiles/ -k {params.ko_db_dir}/ko_list --cpu {params.num_cpus} -f detail-tsv -o {params.tmp_out} --tmp-dir {params.tmp_dir} --report-unannotated {input.AAs} > {log} 2>&1
 
-        rm -rf {params.tmp_out} {params.tmp_dir}
+            bit-filter-KOFamScan-results -i {params.tmp_out} -o {output}
+
+            rm -rf {params.tmp_out} {params.tmp_dir}
+
+        else
+
+            touch {output}
+            printf "Functional annotations not performed because the assembly didn't produce anything.\n" > {log}
+
+        fi
         """
 
 
@@ -789,7 +861,7 @@ rule call_genes:
     conda:
         "envs/prodigal.yaml"
     input:
-        config["assemblies_dir"] + "{ID}-assembly.fasta"
+        assembly = config["assemblies_dir"] + "{ID}-assembly.fasta"
     output:
         AA = config["genes_dir"] + "{ID}-genes.faa",
         nt = config["genes_dir"] + "{ID}-genes.fasta",
@@ -798,7 +870,17 @@ rule call_genes:
         config["logs_dir"] + "{ID}-prodigal.log"
     shell:
         """
-        prodigal -q -c -p meta -a {output.AA} -d {output.nt} -f gff -o {output.gff} -i {input} > {log} 2>&1
+        # only running if assembly produced any contigs
+        if [ -s {input.assembly} ]; then
+
+            prodigal -q -c -p meta -a {output.AA} -d {output.nt} -f gff -o {output.gff} -i {input.assembly} > {log} 2>&1
+
+        else
+
+            touch {output}
+            printf "Gene-calling not performed because the assembly didn't produce anything.\n" > {log}
+
+        fi
         """
 
 
@@ -809,7 +891,7 @@ rule summarize_assemblies:
     conda:
         "envs/bit.yaml"
     input:
-        expand(config["assemblies_dir"] + "{ID}-assembly.fasta", ID = sample_ID_list),
+        expand(config["assemblies_dir"] + "{ID}-assembly.fasta", ID = sample_ID_list)        
     output:
         config["assemblies_dir"] + "assembly-summaries.tsv"
     shell:
@@ -830,7 +912,8 @@ rule assemble:
     params:
         assemblies_dir = config["assemblies_dir"],
         num_threads = config["num_threads"],
-        max_mem = config["max_mem"]
+        max_mem = config["max_mem"],
+        failed_assemblies_file = config["assemblies_dir"] + "Failed-assemblies.tsv"
     output:
         config["assemblies_dir"] + "{ID}-assembly.fasta"
     log:
@@ -840,10 +923,15 @@ rule assemble:
         # removing output directory if exists already but rule still needs to be run (because there is no --force option to megahit i dont't think):
         rm -rf {params.assemblies_dir}{wildcards.ID}-megahit-out/
 
-        megahit -1 {input.R1} -2 {input.R1} -m {params.max_mem} -t {params.num_threads} --min-contig-len 500 -o {params.assemblies_dir}{wildcards.ID}-megahit-out > {log} 2>&1
+        megahit -1 {input.R1} -2 {input.R2} -m {params.max_mem} -t {params.num_threads} --min-contig-len 500 -o {params.assemblies_dir}{wildcards.ID}-megahit-out > {log} 2>&1
         bit-rename-fasta-headers -i {params.assemblies_dir}{wildcards.ID}-megahit-out/final.contigs.fa -w c_{wildcards.ID} -o {output}
 
         rm -rf {params.assemblies_dir}{wildcards.ID}-megahit-out/
+
+        # checking the assembly produced anything (megahit can run, produce the output fasta, but it will be empty if no contigs were assembled)
+        if [ ! -s {output} ]; then
+            printf "{wildcards.ID}\tNo contigs assembled\n" >> {params.failed_assemblies_file}
+        fi
         """
 
 

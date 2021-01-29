@@ -13,7 +13,7 @@
 
 ## single-column file with unique portion of sample names
 sample_info_file:
-    "unique-sample-names.txt"
+    "unique-sample-IDs.txt"
 
 ## raw reads directory (can be relative to workflow directory, or needs to be full path)
 raw_reads_dir:
@@ -27,8 +27,8 @@ raw_R2_suffix:
     "_R2_raw.fastq.gz"
 
 ## root directory of reference databases (or where they will be downloaded if they don't exist yet)
-    # this should be provided as a full path (starting with `/` as the below example 
-    # (note that the the `~/` home shortcut is not expanded
+    # this should be provided as a full path (starting with `/`) and include the ending `/` as in the
+    # below example (note that the the `~/` home shortcut is not expanded
     # by snakemake's evaluation of files, so don't use that)
 REF_DB_ROOT_DIR:
     "/path/to/ref-dbs/"
@@ -40,12 +40,12 @@ REF_DB_ROOT_DIR:
 ## number of threads to use PER snakemake job (which is set with the -j parameter passed to snakemake call)
     # passed to megahit, bowtie2, samtools, metabat2, checkm-pplacer (many may be running concurrently)
 num_threads:
-    20
+    15
 
 ## number of CPUs to use PER snakemake job
     # passed to KOFamScan, CAT, checkm (many may be running concurrently)
 num_cpus:
-    20
+    15
 
 ## number of CPUs to use for gtdb-tk (only 1 gtdb-tk job will be run, so not multiplied, but the pplacer step can be more memory intensive with more cpus i think)
 gtdb_tk_num_cpus:
@@ -63,7 +63,7 @@ minimum_estimated_completion:
 maximum_estimated_redundancy:
     10
 maximum_estimated_strain_heterogeneity:
-    0
+    50
 
 ## quality trimmed/filtered suffixes
 trimmed_R1_suffix:
@@ -145,7 +145,6 @@ METAPHLAN3_DB_DIR:
     "metaphlan3-db"
 METAPHLAN_TRIGGER_FILE:
     "METAPHLAN3_DB_SETUP"
-
 
 ## example usage command ##
 # snakemake --use-conda --conda-prefix ${CONDA_PREFIX}/envs -j 2 -p
