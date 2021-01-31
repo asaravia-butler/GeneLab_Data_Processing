@@ -26,7 +26,7 @@ Michael D. Lee (Mike.Lee@nasa.gov)
 The processing is implemented as a [Snakemake](https://snakemake.readthedocs.io/en/stable/) workflow and utilizes [conda](https://docs.conda.io/en/latest/) environments. The workflow can be used even if unfamiliar with Snakemake and conda, but if wanting to learn more about those, [this Snakemake tutorial](https://snakemake.readthedocs.io/en/stable/tutorial/tutorial.html) within [Snakemake's documentation](https://snakemake.readthedocs.io/en/stable/) is a good place to start for that, and an introduction to conda with installation help and links to other resources can be found [here at Happy Belly Bioinformatics](https://astrobiomike.github.io/unix/conda-intro).  
 
 > **Note on reference databases**  
-> Many reference databases are relied upon throughout this workflow. They will be installed and setup automatically the first time the workflow is run. All together, after installed and unpacked, they will take up about 240 GB of storage, but they may also require up to 500GB during installation and initial un-packing, so be sure there is enough room on your system.
+> Many reference databases are relied upon throughout this workflow. They will be installed and setup automatically the first time the workflow is run. All together, after installed and unpacked, they will take up about 240 GB of storage, but they may also require up to 500GB during installation and initial un-packing, so we need to be sure there is enough room on our system before running the workflow.
 
 ## Utilizing the workflow
 
