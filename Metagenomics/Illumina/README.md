@@ -32,7 +32,7 @@ The processing is implemented as a [Snakemake](https://snakemake.readthedocs.io/
 
 * [Installing conda and snakemake](#installing-conda-and-snakemake)  
 * [Downloading the workflow template files](#downloading-the-workflow-template-files)  
-* [Modifying the variables in the config.yaml file](#modifying-the-variables-in-the-config.yaml-file)  
+* [Modifying the variables in the config.yaml file](#modifying-the-variables-in-the-configyaml-file)  
 * [Running the workflow](#running-the-workflow)  
 
 ### Installing conda and snakemake
@@ -51,7 +51,7 @@ All files required for utilizing the workflow are in the [workflow-template](wor
 <a href="../images/gitzip-ex.png"><img src="../images/gitzip-ex.png"></a>
 </p>
 
-### Modifying the variables in the [config.yaml] file
+### Modifying the variables in the config.yaml file
 We then need to modify the variables in our downloaded version of the [config.yaml](workflow-template/config.yaml) file as needed in order to match our dataset and system setup. These include things like specifying a file with our unique sample identifiers, pointing to where our starting reads are located, and pointing to where our reference databases are to be stored (these should be specified as relative or full paths – if unfamiliar with these, one place you can learn more is [here](https://astrobiomike.github.io/unix/getting-started#the-unix-file-system-structure).  
 
 For example, if we had paired-read data for 2 samples located in `../Raw_Data/` relative to our workflow directory, that look like this:
