@@ -14,7 +14,7 @@ Michael D. Lee (Mike.Lee@nasa.gov)
 
 --- 
 
-# Repository Links
+# Repository links
 
 * [Current processing protocol (GL-DPPD-7107.md)](GL-DPPD-7107.md)  
 * [Processed dataset files](GLDS_Processing_Scripts)  
