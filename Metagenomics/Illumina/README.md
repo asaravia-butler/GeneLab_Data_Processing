@@ -84,7 +84,7 @@ We'd want to set up the first few variables in our config.yaml file such that th
 <a href="../images/config-ex.png"><img src="../images/config-ex.png"></a>
 </p>
 
-The last variable we *need* to specify for our system is the `REF_DB_ROOT_DIR`, which is where we want the reference databases to be stored. As noted above, they will take up about 240 GB of storage after setup and fully unpacked, but they may also require up to 500GB during installation and initial un-packing, so we need to be sure there is enough room on our system before trying to run the workflow.
+The last variable we *need* to specify for our system is the `REF_DB_ROOT_DIR`, which is where we want the reference databases to be stored. As noted above, the reference databases will take up about 240 GB of storage after setup, but they may also require up to 500GB during installation and initial un-packing, so we need to be sure there is enough room on our system before trying to run the workflow.
 
 The rest of the variables in the config.yaml file only need to be changed if wanted. 
 
