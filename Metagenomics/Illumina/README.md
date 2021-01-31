@@ -30,10 +30,10 @@ The processing is implemented as a [Snakemake](https://snakemake.readthedocs.io/
 
 ## Utilizing the workflow
 
-* [Installing conda and snakemake](#Installing-conda-and-snakemake)  
-* [Downloading the workflow template files](#Downloading-the-workflow-template-files)  
-* [Modifying the variables in the config.yaml file](#Modifying-the-variables-in-the-config.yaml-file)  
-* [Running the workflow](#Running-the-workflow)  
+* [Installing conda and snakemake](#installing-conda-and-snakemake)  
+* [Downloading the workflow template files](#downloading-the-workflow-template-files)  
+* [Modifying the variables in the config.yaml file](#modifying-the-variables-in-the-config.yaml-file)  
+* [Running the workflow](#running-the-workflow)  
 
 ### Installing conda and snakemake
 We recommend installing a Miniconda, Python3 version appropriate for your system, as exemplified in [the above link](https://astrobiomike.github.io/unix/conda-intro#getting-and-installing-conda).  
