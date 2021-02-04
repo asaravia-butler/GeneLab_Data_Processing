@@ -705,11 +705,11 @@ rule get_cov_and_det:
 
             # filtering coverages based on detection
                 # genes
-            grep -v "#" {params.gene_cov_and_det_tmp} | awk -F $'\t' ' BEGIN {{OFS=FS}} {{ if ( $10 <= 0.5 ) $4 = 0 }} {{ print $1,$4 }} ' > {params.gene_cov_tmp}
+            grep -v "#" {params.gene_cov_and_det_tmp} | awk -F $'\\t' ' BEGIN {{OFS=FS}} {{ if ( $10 <= 0.5 ) $4 = 0 }} {{ print $1,$4 }} ' > {params.gene_cov_tmp}
             cat <( printf "gene_ID\tcoverage\n" ) {params.gene_cov_tmp} > {output.gene_covs}
 
                 # contigs
-            grep -v "#" {params.contig_cov_and_det_tmp} | awk -F $'\t' ' BEGIN {{OFS=FS}} {{ if ( $5 <= 50 ) $2 = 0 }} {{ print $1,$2 }} ' > {params.contig_cov_tmp}
+            grep -v "#" {params.contig_cov_and_det_tmp} | awk -F $'\\t' ' BEGIN {{OFS=FS}} {{ if ( $5 <= 50 ) $2 = 0 }} {{ print $1,$2 }} ' > {params.contig_cov_tmp}
             cat <( printf "contig_ID\tcoverage\n" ) {params.contig_cov_tmp} > {output.contig_covs}
 
             # removing intermediate files
@@ -787,7 +787,7 @@ rule run_tax_classification:
     shell:
         """
         # only running if assembly produced any contigs
-        if [ -s {input.assembly} ]; then
+        if [ -s {input.assembly} ] && [ -s {input.AA} ]; then
 
             CAT contigs -d {params.cat_db} -t {params.cat_tax} -n {params.num_cpus} -r 3 --top 4 --I_know_what_Im_doing -c {input.assembly} -p {input.AA} -o {params.tmp_out_prefix} --no_stars --block_size 4 --index_chunks 2 --force > {log} 2>&1
 
@@ -808,7 +808,7 @@ rule run_tax_classification:
         else
 
             touch {output}
-            printf "Assembly-based taxonomic classification not performed because the assembly didn't produce anything.\n" > {log}
+            printf "Assembly-based taxonomic classification not performed because the assembly didn't produce anything and/or no genes were identified.\n" > {log}
 
         fi
         """
@@ -836,7 +836,7 @@ rule run_KO_annotation:
     shell:
         """
         # only running if assembly produced any contigs
-        if [ -s {params.assembly} ]; then
+        if [ -s {params.assembly} ] && [ -s {input.AAs} ]; then
 
             exec_annotation -p {params.ko_db_dir}/profiles/ -k {params.ko_db_dir}/ko_list --cpu {params.num_cpus} -f detail-tsv -o {params.tmp_out} --tmp-dir {params.tmp_dir} --report-unannotated {input.AAs} > {log} 2>&1
 
@@ -847,7 +847,7 @@ rule run_KO_annotation:
         else
 
             touch {output}
-            printf "Functional annotations not performed because the assembly didn't produce anything.\n" > {log}
+            printf "Functional annotations not performed because the assembly didn't produce anything and/or no genes were identified.\n" > {log}
 
         fi
         """
