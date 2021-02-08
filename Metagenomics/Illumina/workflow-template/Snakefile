@@ -233,7 +233,7 @@ rule filtering_checkm_results_and_copying_MAGs:
         if [ $(find {params.bins_dir} -name "*.fa" | wc -l) -gt 0 ]; then
 
             cat <( printf "Bin Id\tMarker lineage\t# genomes\t# markers\t# marker sets\t0\t1\t2\t3\t4\t5+\tCompleteness\tContamination\tStrain heterogeneity\n" ) \
-                <( awk -F $'\\t' ' $12 >= {params.min_est_comp} && $13 <= {params.max_est_redund} && $14 == {params.max_est_strain_het} ' {input} ) > {params.tmp_file}
+                <( awk -F $'\\t' ' $12 >= {params.min_est_comp} && $13 <= {params.max_est_redund} && $14 <= {params.max_est_strain_het} ' {input} ) > {params.tmp_file}
 
             sed 's/-bin\./-MAG-/' {params.tmp_file} > {output}
 
@@ -580,13 +580,17 @@ rule make_combined_contig_tax_tables:
         "envs/bit.yaml"
     input:
         expand(config["annotations_and_tax_dir"] + "{ID}-contig-coverage-and-tax.tsv", ID = sample_ID_list)
+    params:
+        out_prefix = config["combined_output_dir"] + "Combined"
     output:
-        combined_tax = config["combined_output_dir"] + "Combined-contig-level-taxonomy-coverages.tsv"
+        combined_tax = config["combined_output_dir"] + "Combined-contig-level-taxonomy-coverages.tsv",
+        norm_combined_tax = config["combined_output_dir"] + "Combined-contig-level-taxonomy-coverages-CPM.tsv"
     shell:
         """
-        bit-GL-combine-contig-tax-tables {input} -o {output.combined_tax}
+        bit-GL-combine-contig-tax-tables {input} -o {params.out_prefix}
         # shortening column names to unique part of sample names
         sed -i.tmp 's/-contig-coverage-and-tax//g' {output.combined_tax} && rm {output.combined_tax}.tmp
+        sed -i.tmp 's/-contig-coverage-and-tax//g' {output.norm_combined_tax} && rm {output.norm_combined_tax}.tmp
         """
 
 
@@ -599,13 +603,17 @@ rule make_combined_gene_level_tables:
         out_prefix = config["combined_output_dir"] + "Combined"
     output:
         combined_annots = config["combined_output_dir"] + "Combined-gene-level-KO-function-coverages.tsv",
-        combined_tax = config["combined_output_dir"] + "Combined-gene-level-taxonomy-coverages.tsv"
+        norm_combined_annots = config["combined_output_dir"] + "Combined-gene-level-KO-function-coverages-CPM.tsv",
+        combined_tax = config["combined_output_dir"] + "Combined-gene-level-taxonomy-coverages.tsv",
+        norm_combined_tax = config["combined_output_dir"] + "Combined-gene-level-taxonomy-coverages-CPM.tsv"
     shell:
         """
         bit-GL-combine-KO-and-tax-tables {input} -o {params.out_prefix}
         # shortening column names to unique part of sample names
         sed -i.tmp 's/-gene-coverage-annotation-and-tax//g' {output.combined_annots} && rm {output.combined_annots}.tmp
         sed -i.tmp 's/-gene-coverage-annotation-and-tax//g' {output.combined_tax} && rm {output.combined_tax}.tmp
+        sed -i.tmp 's/-gene-coverage-annotation-and-tax//g' {output.norm_combined_annots} && rm {output.norm_combined_annots}.tmp
+        sed -i.tmp 's/-gene-coverage-annotation-and-tax//g' {output.norm_combined_tax} && rm {output.norm_combined_tax}.tmp
         """
 
 
