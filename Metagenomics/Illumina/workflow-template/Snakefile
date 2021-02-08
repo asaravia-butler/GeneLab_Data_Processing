@@ -618,8 +618,11 @@ rule combine_contig_tax_and_coverage:
         tax = config["annotations_and_tax_dir"] + "{ID}-contig-tax.tsv"
     params:
         assembly = config["assemblies_dir"] + "{ID}-assembly.fasta",
+        AAs = config["genes_dir"] + "{ID}-genes.faa",
         contig_tmp = config["annotations_and_tax_dir"] + "{ID}-contig.tmp",
-        header_tmp = config["annotations_and_tax_dir"] + "{ID}-contig-header.tmp"
+        header_tmp = config["annotations_and_tax_dir"] + "{ID}-contig-header.tmp",
+        contig_p1_tmp = config["annotations_and_tax_dir"] + "{ID}-contig-p1.tmp",
+        tax_col_tmp = config["annotations_and_tax_dir"] + "{ID}-tax-col.tmp"
     output:
         config["annotations_and_tax_dir"] + "{ID}-contig-coverage-and-tax.tsv"
     shell:
@@ -627,10 +630,22 @@ rule combine_contig_tax_and_coverage:
         # only running if the assembly produced anything
         if [ -s {params.assembly} ]; then
 
-            paste <( tail -n +2 {input.cov} | sort -V -k 1 ) <( tail -n +2 {input.tax} | sort -V -k 1 | cut -f 2- ) > {params.contig_tmp}
-            paste <( head -n 1 {input.cov} ) <( head -n 1 {input.tax} | cut -f 2- ) > {params.header_tmp}
-            cat {params.header_tmp} {params.contig_tmp} > {output}
-            rm {params.contig_tmp} {params.header_tmp} {input}
+            # if there were no genes called, there is no contig-level taxonomy, so dealing with that here
+            if [ -s {params.AAs} ]; then
+                paste <( tail -n +2 {input.cov} | sort -V -k 1 ) <( tail -n +2 {input.tax} | sort -V -k 1 | cut -f 2- ) > {params.contig_tmp}
+                paste <( head -n 1 {input.cov} ) <( head -n 1 {input.tax} | cut -f 2- ) > {params.header_tmp}
+                cat {params.header_tmp} {params.contig_tmp} > {output}
+                rm {params.contig_tmp} {params.header_tmp} {input}
+
+            else
+
+                paste <( tail -n +2 {input.cov} | sort -V -k 1 ) > {params.contig_p1_tmp}
+                sed 's/.*/NA/g' {params.contig_p1_tmp} > {params.tax_col_tmp}
+                paste {params.contig_p1_tmp} {params.tax_col_tmp} {params.tax_col_tmp} {params.tax_col_tmp} {params.tax_col_tmp} {params.tax_col_tmp} {params.tax_col_tmp} {params.tax_col_tmp} {params.tax_col_tmp} > {params.contig_tmp}
+                cat <( printf "contig_ID\tcoverage\ttaxid\tdomain\tphylum\tclass\torder\tfamily\tgenus\tspecies\n" ) {params.contig_tmp} > {output}
+                rm {params.contig_p1_tmp} {params.tax_col_tmp} {params.contig_tmp}
+
+            fi
 
         else
 
@@ -650,14 +665,15 @@ rule combine_gene_annots_tax_and_coverage:
         tax = config["annotations_and_tax_dir"] + "{ID}-gene-tax.tsv"
     params:
         assembly = config["assemblies_dir"] + "{ID}-assembly.fasta",
+        AAs = config["genes_dir"] + "{ID}-genes.faa",
         gene_tmp = config["annotations_and_tax_dir"] + "{ID}-gene.tmp",
         header_tmp = config["annotations_and_tax_dir"] + "{ID}-gene-header.tmp"
     output:
         config["annotations_and_tax_dir"] + "{ID}-gene-coverage-annotation-and-tax.tsv"
     shell:
         """
-        # only running if the assembly produced anything
-        if [ -s {params.assembly} ]; then
+        # only running if the assembly produced anything and genes were identified (they are required for this)
+        if [ -s {params.assembly} ] && [ -s {params.AAs} ]; then
 
             paste <( tail -n +2 {input.cov} | sort -V -k 1 ) <( tail -n +2 {input.annots} | sort -V -k 1 | cut -f 2- ) <( tail -n +2 {input.tax} | sort -V -k 1 | cut -f 2- ) > {params.gene_tmp}
             paste <( head -n 1 {input.cov} ) <( head -n 1 {input.annots} | cut -f 2- ) <( head -n 1 {input.tax} | cut -f 2- ) > {params.header_tmp}
@@ -701,19 +717,36 @@ rule get_cov_and_det:
         # only running if the assembly produced anything
         if [ -s {params.assembly} ]; then
 
-            pileup.sh -in {input.bam} fastaorf={input.nt} outorf={params.gene_cov_and_det_tmp} out={params.contig_cov_and_det_tmp} > {log} 2>&1
+            # only running on genes also if genes were identified
+            if [ -s {input.nt} ]; then
 
-            # filtering coverages based on detection
-                # genes
-            grep -v "#" {params.gene_cov_and_det_tmp} | awk -F $'\\t' ' BEGIN {{OFS=FS}} {{ if ( $10 <= 0.5 ) $4 = 0 }} {{ print $1,$4 }} ' > {params.gene_cov_tmp}
-            cat <( printf "gene_ID\tcoverage\n" ) {params.gene_cov_tmp} > {output.gene_covs}
+                pileup.sh -in {input.bam} fastaorf={input.nt} outorf={params.gene_cov_and_det_tmp} out={params.contig_cov_and_det_tmp} > {log} 2>&1
 
-                # contigs
-            grep -v "#" {params.contig_cov_and_det_tmp} | awk -F $'\\t' ' BEGIN {{OFS=FS}} {{ if ( $5 <= 50 ) $2 = 0 }} {{ print $1,$2 }} ' > {params.contig_cov_tmp}
-            cat <( printf "contig_ID\tcoverage\n" ) {params.contig_cov_tmp} > {output.contig_covs}
+                # filtering coverages based on detection
+                    # genes
+                grep -v "#" {params.gene_cov_and_det_tmp} | awk -F $'\\t' ' BEGIN {{OFS=FS}} {{ if ( $10 <= 0.5 ) $4 = 0 }} {{ print $1,$4 }} ' > {params.gene_cov_tmp}
+                cat <( printf "gene_ID\tcoverage\n" ) {params.gene_cov_tmp} > {output.gene_covs}
 
-            # removing intermediate files
-            rm {params.gene_cov_and_det_tmp} {params.contig_cov_and_det_tmp} {params.gene_cov_tmp} {params.contig_cov_tmp}
+                    # contigs
+                grep -v "#" {params.contig_cov_and_det_tmp} | awk -F $'\\t' ' BEGIN {{OFS=FS}} {{ if ( $5 <= 50 ) $2 = 0 }} {{ print $1,$2 }} ' > {params.contig_cov_tmp}
+                cat <( printf "contig_ID\tcoverage\n" ) {params.contig_cov_tmp} > {output.contig_covs}
+
+                # removing intermediate files
+                rm {params.gene_cov_and_det_tmp} {params.contig_cov_and_det_tmp} {params.gene_cov_tmp} {params.contig_cov_tmp}
+
+            else
+
+                pileup.sh -in {input.bam} out={params.contig_cov_and_det_tmp} > {log} 2>&1
+
+                # filtering coverages based on detection
+                    # contigs
+                grep -v "#" {params.contig_cov_and_det_tmp} | awk -F $'\\t' ' BEGIN {{OFS=FS}} {{ if ( $5 <= 50 ) $2 = 0 }} {{ print $1,$2 }} ' > {params.contig_cov_tmp}
+                cat <( printf "contig_ID\tcoverage\n" ) {params.contig_cov_tmp} > {output.contig_covs}
+
+                # writing out empty genes coverage file
+                printf "gene_ID\tcoverage\n" > {output.gene_covs}
+                printf "\n\nGene-level coverage info not recovered because the assembly didn't have any genes identified.\n" >> {log}
+            fi
 
         else
 
@@ -786,7 +819,7 @@ rule run_tax_classification:
         config["logs_dir"] + "{ID}-CAT.log"
     shell:
         """
-        # only running if assembly produced any contigs
+        # only running if assembly produced any contigs and genes were identified (they are required for this)
         if [ -s {input.assembly} ] && [ -s {input.AA} ]; then
 
             CAT contigs -d {params.cat_db} -t {params.cat_tax} -n {params.num_cpus} -r 3 --top 4 --I_know_what_Im_doing -c {input.assembly} -p {input.AA} -o {params.tmp_out_prefix} --no_stars --block_size 4 --index_chunks 2 --force > {log} 2>&1
@@ -835,7 +868,7 @@ rule run_KO_annotation:
         config["logs_dir"] + "{ID}-kofamscan.log"
     shell:
         """
-        # only running if assembly produced any contigs
+        # only running if assembly produced any contigs and genes were identified (they are required for this)
         if [ -s {params.assembly} ] && [ -s {input.AAs} ]; then
 
             exec_annotation -p {params.ko_db_dir}/profiles/ -k {params.ko_db_dir}/ko_list --cpu {params.num_cpus} -f detail-tsv -o {params.tmp_out} --tmp-dir {params.tmp_dir} --report-unannotated {input.AAs} > {log} 2>&1
