@@ -147,6 +147,9 @@ rule vsearch_process_all:
         vsearch --usearch_global {input} -db {output.otus} --sizein --id 0.97 --otutabout {params.tmp_counts} > {log} 2>&1
         sed 's/^#OTU ID/OTU_ID/' {params.tmp_counts} > {output.counts}
 
+        # removing line wraps from fasta file
+        bit-remove-wraps {output.otus} > {output.otus}.tmp && mv {output.otus}.tmp {output.otus}
+        
         # cleaning up tmp files
         rm {input} {params}
         """
