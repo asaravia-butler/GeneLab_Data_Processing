@@ -35,7 +35,8 @@ buildTargets <- function(opt) {
     target$labels = length(unique(table$Label))
     labelnames <- unique(table$Label)
     target$seperate_channel_files <- eval((length(unique(files)) == 2*length(unique(table$`Hybridization Assay Name`))))
-    factors <- as.data.frame(as.character(isa@factors[[which_assay]][[1]]))
+    factors <- isa@factors[[which_assay]]
+    factors <- data.frame(t(matrix(unlist(factors), nrow=length(factors), byrow=T)), stringsAsFactors = FALSE)
     #factors <- as.data.frame(table[,which(grepl("Factor",colnames(table)))])
     factors <- as.data.frame(factors[study_samples,])
     colnames(factors)<-paste("factor",1:dim(factors)[2], sep = "_")
