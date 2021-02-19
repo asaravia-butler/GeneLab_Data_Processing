@@ -67,7 +67,7 @@ conda install -c conda-forge -c bioconda -c defaults snakemake
 ```
 
 ### 2. Downloading the workflow template files
-All files required for utilizing the workflow are in the [workflow-template](workflow-template) directory. To get a copy of that directory on to our system, we can copy the address of that directory, paste it into [GitZip here](http://kinolien.github.io/gitzip/), and then click download.
+All files required for utilizing the workflow are in the [workflow-template](workflow-template) directory. To get a copy of that directory on to our system, we can copy the github web address of that directory, paste it into [GitZip here](http://kinolien.github.io/gitzip/), and then click download.
 
 
 ### 3. Modifying the variables in the config.yaml file
