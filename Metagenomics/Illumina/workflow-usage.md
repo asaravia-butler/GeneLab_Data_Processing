@@ -1,4 +1,4 @@
-# Workflow usage instructions
+# Workflow information and usage instructions
 
 
 ## General workflow info
