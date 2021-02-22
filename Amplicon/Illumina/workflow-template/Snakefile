@@ -119,6 +119,8 @@ rule zip_biom:
 if config["trim_primers"] == "TRUE":
 
     rule run_R:
+        conda:
+            "envs/R.yaml"
         input:
             expand(config["trimmed_reads_dir"] + "{ID}" + config["primer_trimmed_R1_suffix"], ID = sample_ID_list),
             expand(config["trimmed_reads_dir"] + "{ID}" + config["primer_trimmed_R2_suffix"], ID = sample_ID_list)
@@ -154,6 +156,8 @@ if config["trim_primers"] == "TRUE":
 else:
 
     rule run_R:
+        conda:
+            "envs/R.yaml"
         input:
             expand(config["raw_reads_dir"] + "{ID}" + config["raw_R1_suffix"], ID = sample_ID_list),
             expand(config["raw_reads_dir"] + "{ID}" + config["raw_R2_suffix"], ID = sample_ID_list)
