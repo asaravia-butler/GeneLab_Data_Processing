@@ -588,9 +588,6 @@ rule make_combined_contig_tax_tables:
     shell:
         """
         bit-GL-combine-contig-tax-tables {input} -o {params.out_prefix}
-        # shortening column names to unique part of sample names
-        sed -i.tmp 's/-contig-coverage-and-tax//g' {output.combined_tax} && rm {output.combined_tax}.tmp
-        sed -i.tmp 's/-contig-coverage-and-tax//g' {output.norm_combined_tax} && rm {output.norm_combined_tax}.tmp
         """
 
 
@@ -609,11 +606,6 @@ rule make_combined_gene_level_tables:
     shell:
         """
         bit-GL-combine-KO-and-tax-tables {input} -o {params.out_prefix}
-        # shortening column names to unique part of sample names
-        sed -i.tmp 's/-gene-coverage-annotation-and-tax//g' {output.combined_annots} && rm {output.combined_annots}.tmp
-        sed -i.tmp 's/-gene-coverage-annotation-and-tax//g' {output.combined_tax} && rm {output.combined_tax}.tmp
-        sed -i.tmp 's/-gene-coverage-annotation-and-tax//g' {output.norm_combined_annots} && rm {output.norm_combined_annots}.tmp
-        sed -i.tmp 's/-gene-coverage-annotation-and-tax//g' {output.norm_combined_tax} && rm {output.norm_combined_tax}.tmp
         """
 
 
