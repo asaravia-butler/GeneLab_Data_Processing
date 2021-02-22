@@ -643,7 +643,7 @@ rule combine_contig_tax_and_coverage:
                 paste <( tail -n +2 {input.cov} | sort -V -k 1 ) <( tail -n +2 {input.tax} | sort -V -k 1 | cut -f 2- ) > {params.contig_tmp}
                 paste <( head -n 1 {input.cov} ) <( head -n 1 {input.tax} | cut -f 2- ) > {params.header_tmp}
                 cat {params.header_tmp} {params.contig_tmp} > {output}
-                rm {params.contig_tmp} {params.header_tmp} {input}
+                rm -rf {params.contig_tmp} {params.header_tmp} {input}
 
             else
 
@@ -651,13 +651,14 @@ rule combine_contig_tax_and_coverage:
                 sed 's/.*/NA/g' {params.contig_p1_tmp} > {params.tax_col_tmp}
                 paste {params.contig_p1_tmp} {params.tax_col_tmp} {params.tax_col_tmp} {params.tax_col_tmp} {params.tax_col_tmp} {params.tax_col_tmp} {params.tax_col_tmp} {params.tax_col_tmp} {params.tax_col_tmp} > {params.contig_tmp}
                 cat <( printf "contig_ID\tcoverage\ttaxid\tdomain\tphylum\tclass\torder\tfamily\tgenus\tspecies\n" ) {params.contig_tmp} > {output}
-                rm {params.contig_p1_tmp} {params.tax_col_tmp} {params.contig_tmp}
+                rm -rf {input} {params.contig_p1_tmp} {params.tax_col_tmp} {params.contig_tmp}
 
             fi
 
         else
 
             printf "contig_ID\tcoverage\ttaxid\tdomain\tphylum\tclass\torder\tfamily\tgenus\tspecies\n" > {output}
+            rm -rf {input}
 
         fi
         """
@@ -688,11 +689,12 @@ rule combine_gene_annots_tax_and_coverage:
 
             cat {params.header_tmp} {params.gene_tmp} > {output}
 
-            rm {params.gene_tmp} {params.header_tmp} {input}
+            rm -rf {params.gene_tmp} {params.header_tmp} {input}
 
         else
 
             printf "gene_ID\tcoverage\tKO_ID\tKO_function\ttaxid\tdomain\tphylum\tclass\torder\tfamily\tgenus\tspecies\n" > {output}
+            rm -rf {input}
 
         fi
         """
