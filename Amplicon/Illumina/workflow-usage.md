@@ -6,10 +6,10 @@ The current processing protocol is implemented as a [Snakemake](https://snakemak
 
 ## Utilizing the workflow
 
-1. [Install conda and snakemake](#install-conda-and-snakemake)  
-2. [Download the workflow template files](#download-the-workflow-template-files)  
-3. [Modify the variables in the config.yaml file](#modify-the-variables-in-the-configyaml-file)  
-4. [Run the workflow](#run-the-workflow)  
+1. [Install conda and snakemake](#1-install-conda-and-snakemake)  
+2. [Download the workflow template files](#2-download-the-workflow-template-files)  
+3. [Modify the variables in the config.yaml file](#3-modify-the-variables-in-the-configyaml-file)  
+4. [Run the workflow](#4-run-the-workflow)  
 
 ### 1. Install conda and snakemake
 We recommend installing a Miniconda, Python3 version appropriate for your system, as exemplified in [the above link](https://astrobiomike.github.io/unix/conda-intro#getting-and-installing-conda).  
