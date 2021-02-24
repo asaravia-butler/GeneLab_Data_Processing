@@ -224,5 +224,50 @@ data <- oligo::rma(raw, target = "core", background=TRUE, normalize=TRUE)
 
 * `background = TRUE` - perform RMA background correction
 
+### For Agilent Array Data
+```R
+data <- backgroundCorrect(raw, method="normexp", offset=50)
+data <- normalizeBetweenArrays(data, method="quantile")
+```
+**Parameter Definitions:**
+*	`data <-` – specifies the variable that will store the results within in our R environment
 
+*	`backgroundCorrect()` – the Limma function for background correction
 
+*	`raw` – raw data object generated in 1.
+
+* `method="normexp"` - perform normexp background correction
+
+* `offset=50` - set offset value for background correction
+
+*	`normalizeBetweenArrays()` – the Limma function for cross array normalization
+
+* `method="quantile"` - perform quantile normalization
+
+## 3. Data Filtering
+```R
+data.filt <- genefilter::nsFilter(data, require.entrez=TRUE,
+    remove.dupEntrez=TRUE, var.func=IQR,
+    var.cutoff=0.5, var.filter=TRUE,
+    filterByQuantile=TRUE, feature.exclude="^AFFX")
+```
+**Parameter Definitions:**
+*	`data.filt <-` – specifies the variable that will store the results within in our R environment
+
+*	`nsFilter()` – the genefilter function we are calling, with the following parameters set within it
+
+*	`data` – normalized data object generated in 2.
+
+* `require.entrez=TRUE` - filter unannotated probes
+
+* `remove.dupEntrez=TRUE` - filter duplicate gene level values
+
+*	`var.func=IQR` – select probes by maximum interquartile range
+
+* `var.cutoff=0.5` - set variance filter cutoff
+
+*	`var.filter=TRUE` – filter by variance function
+
+* `filterByQuantile=TRUE` - filter by quantiles
+
+* `feature.exclude="^AFFX"` - filter control probes
