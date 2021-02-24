@@ -24,7 +24,7 @@ conda install -c conda-forge -c bioconda -c defaults snakemake
 All files required for utilizing the GeneLab workflow for processing Illumina amplicon data are in the [workflow-template](workflow-template) directory. To get a copy of that directory on to your system, copy the github web address of that directory, paste it into [GitZip here](http://kinolien.github.io/gitzip/), and then click download.
 
 ### 3. Modify the variables in the config.yaml file
-Once you've downlonaded the workflow template, you can modify the variables in the [config.yaml](workflow-template/config.yaml) file as needed. For example, you will need to indicate the paths to your input data (raw reads) and where to print your output data on your system and, if necessary, modify each variable to be consistent with the study you want to process. 
+Once you've downlonaded the workflow template, you can modify the variables in the [config.yaml](workflow-template/config.yaml) file as needed. For example, if you are processing a non-GLDS dataset, you will have to provide a text file containing a single-column list of unique sample identifiers. You will also need to indicate the paths to your input data (raw reads) and where to print your output data on your system and, if necessary, modify each variable to be consistent with the study you want to process. 
 
 ### 4. Run the workflow
 
