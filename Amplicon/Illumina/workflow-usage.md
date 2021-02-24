@@ -6,12 +6,12 @@ The current processing protocol is implemented as a [Snakemake](https://snakemak
 
 ## Utilizing the workflow
 
-1. [Installing conda and snakemake](#installing-conda-and-snakemake)  
-2. [Downloading the workflow template files](#downloading-the-workflow-template-files)  
-3. [Modifying the variables in the config.yaml file](#modifying-the-variables-in-the-configyaml-file)  
-4. [Running the workflow](#running-the-workflow)  
+1. [Install conda and snakemake](#install-conda-and-snakemake)  
+2. [Download the workflow template files](#download-the-workflow-template-files)  
+3. [Modify the variables in the config.yaml file](#modify-the-variables-in-the-configyaml-file)  
+4. [Run the workflow](#run-the-workflow)  
 
-### 1. Installing conda and snakemake
+### 1. Install conda and snakemake
 We recommend installing a Miniconda, Python3 version appropriate for your system, as exemplified in [the above link](https://astrobiomike.github.io/unix/conda-intro#getting-and-installing-conda).  
 
 Once conda is installed on your system, you can install the latest version of snakemake by running the following command:
@@ -20,13 +20,13 @@ Once conda is installed on your system, you can install the latest version of sn
 conda install -c conda-forge -c bioconda -c defaults snakemake
 ```
 
-### 2. Downloading the workflow template files
+### 2. Download the workflow template files
 All files required for utilizing the GeneLab workflow for processing Illumina amplicon data are in the [workflow-template](workflow-template) directory. To get a copy of that directory on to your system, copy the github web address of that directory, paste it into [GitZip here](http://kinolien.github.io/gitzip/), and then click download.
 
-### 3. Modifying the variables in the config.yaml file
+### 3. Modify the variables in the config.yaml file
 Once you've downlonaded the workflow template, you can modify the variables in the [config.yaml](workflow-template/config.yaml) file as needed. For example, you will need to indicate the paths to your input data (raw reads) and where to print your output data on your system and, if necessary, modify each variable to be consistent with the study you want to process. 
 
-### 4. Running the workflow
+### 4. Run the workflow
 
 To run the workflow, navigate to the directory holding the Snakefile, config.yaml, and other workflow files that you downloaded in step 2 then run the following command: 
 
