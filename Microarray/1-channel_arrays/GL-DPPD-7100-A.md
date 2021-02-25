@@ -271,3 +271,47 @@ data.filt <- genefilter::nsFilter(data, require.entrez=TRUE,
 * `filterByQuantile=TRUE` - filter by quantiles
 
 * `feature.exclude="^AFFX"` - filter control probes
+
+## 4. Differential Gene Expression
+
+### Fit Linear Model
+
+```R
+fit <- lmFit(data.filt, design)
+```
+**Parameter Definitions:**
+*	`fit <-` – specifies the variable that will store the results within in our R environment
+
+*	`lmFit()` – the Limma function we are calling, with the following parameters set within it
+
+*	`data.filt` – filtered data object generated in 3.
+
+* `design` - model matrix defining group membership and pairing of samples
+
+### Generate Contrast Matrix
+
+```R
+cont.matrix <- makeContrasts(contrasts = contrasts,levels=design)
+```
+**Parameter Definitions:**
+*	`cont.matrix <-` – specifies the variable that will store the results within in our R environment
+
+*	`makeContrasts()` – the Limma function we are calling, with the following parameters set within it
+
+*	`contrasts` – formatted list of design group name pairs
+
+* `levels` - model matrix defining group membership and pairing of samples
+
+### Fit Contrasts to Linear Model
+
+```R
+contrast.fit <- contrasts.fit(fit, cont.matrix)
+```
+**Parameter Definitions:**
+*	`contrast.fit <-` – specifies the variable that will store the results within in our R environment
+
+*	`contrasts.fit()` – the Limma function we are calling, with the following parameters set within it
+
+*	`fit` – fit linear model object generated above
+
+* `cont.matrix` - contrast matrix object generated above
