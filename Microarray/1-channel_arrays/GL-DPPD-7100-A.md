@@ -315,3 +315,38 @@ contrast.fit <- contrasts.fit(fit, cont.matrix)
 *	`fit` – fit linear model object generated above
 
 * `cont.matrix` - contrast matrix object generated above
+
+### Perform Empirical Bayes Moderation
+
+```R
+contrast.fit <- eBayes(contrast.fit)
+```
+**Parameter Definitions:**
+*	`contrast.fit <-` – specifies the variable that will store the results within in our R environment
+
+*	`eBayes()` – the Limma function we are calling, with the following parameters set within it
+
+*	`contrast.fit` – contrast fit linear model object generated above
+
+### Generate Differential Expression Tables
+
+```R
+top <- topTable(contrast.fit, coef = i, number = Inf, genelist = contrast.fit$genes$ID, adjust.method = "BH", sort.by = "none")
+```
+**Parameter Definitions:**
+*	`top <-` – specifies the variable that will store the results within in our R environment
+
+*	`topTable()` – the Limma function we are calling, with the following parameters set within it
+
+*	`contrast.fit` – contrast fit linear model object generated above
+
+* `coef =i` - index of group contrast to perform statistical tests on
+
+* `number = Inf` - perform tests for all genes
+
+* `genelist = contrast.fit$genes$ID` - choose annotation names for test genes
+
+* `adjust.method = "BH"` - perform Benjamini Hochberg multiple hypothesis correction of p-values
+
+* `sort.by = "none"` - maintain gene order from contrast.fit for all contrast indexes
+
