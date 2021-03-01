@@ -31,7 +31,7 @@ All files required for utilizing the GeneLab workflow for processing Illumina me
 </p>
 
 ### 3. Modify the variables in the config.yaml file
-Once you've downlonaded the workflow template, you can modify the variables in your downloaded version of the [config.yaml](workflow-template/config.yaml) file as needed in order to match your dataset and system setup. For example, if you are processing a non-GLDS dataset, you will have to provide a text file containing a single-column list of unique sample identifiers (see an example of how to set this up below). You will also need to indicate the paths to your input data (raw reads and each reference database if they have already been downloaded - if they have not been downloaded, indicate the path to where you want each reference database downloaded) and where to print your output data on your system. Additionally, if necessary, you'll need to modify each variable in the config.yaml file to be consistent with the study you want to process and the machine you're using. 
+Once you've downlonaded the workflow template, you can modify the variables in your downloaded version of the [config.yaml](workflow-template/config.yaml) file as needed in order to match your dataset and system setup. For example, you will have to provide a text file containing a single-column list of unique sample identifiers (see an example of how to set this up below). You will also need to indicate the paths to your input data (raw reads) and the root directory for where the reference databases should be stored (they will be setup automatically). Additionally, if necessary, you'll need to modify each variable in the config.yaml file to be consistent with the study you want to process and the machine you're using. 
 
 > Note: If you are unfamiliar with how to specify paths, one place you can learn more is [here](https://astrobiomike.github.io/unix/getting-started#the-unix-file-system-structure).  
 
@@ -63,14 +63,14 @@ Sample-2
 
 ### 4. Run the workflow
 
-To run the workflow, navigate to the directory holding the Snakefile, config.yaml, and other workflow files that you downloaded in step 2 then run the following command:
+While in the directory holding the Snakefile, config.yaml, and other workflow files that you downloaded in step 2, here is one example command of how to run the workflow:
 
 ```bash
 snakemake --use-conda --conda-prefix ${CONDA_PREFIX}/envs -j 2 -p
 ```
 
 * `--use-conda` – specifies to use the conda environments included in the workflow (these are specified in the [envs](envs) directory)
-* `--conda-prefix` – indicates where the needed conda environments will be stored. Adding this option will also allow the same conda environments to be re-used when processing additional datasets, rather than makeing new environments each time you run the workflow. The value listed for this option, `${CONDA_PREFIX}/envs`, points to the default location for conda environments (note: the variable `${CONDA_PREFIX}` will be expanded to the appropriate location on whichever system it is run on).
+* `--conda-prefix` – indicates where the needed conda environments will be stored. Adding this option will also allow the same conda environments to be re-used when processing additional datasets, rather than making new environments each time you run the workflow. The value listed for this option, `${CONDA_PREFIX}/envs`, points to the default location for conda environments (note: the variable `${CONDA_PREFIX}` will be expanded to the appropriate location on whichever system it is run on).
 * `-j` – assigns the number of jobs Snakemake should run concurrently (keep in mind that many of the thread and cpu parameters set in the config.yaml file will be multiplied by this)
 * `-p` – specifies to print out each command being run to the screen
 

@@ -150,7 +150,7 @@ if config["trim_primers"] == "TRUE":
             "R-processing.log"
         shell:
             """
-            Rscript scripts/full-R-processing.R "{params.left_trunc}" "{params.right_trunc}" "{params.left_maxEE}" "{params.right_maxEE}" "{params.trim_primers}" "{sample_IDs_file}" "{params.trimmed_reads_dir}" "{params.filtered_reads_dir}" "{params.primer_trimmed_R1_suffix}" "{params.primer_trimmed_R2_suffix}" "{params.filtered_R1_suffix}" "{params.filtered_R2_suffix}" "{params.final_outputs_dir}" > {log} 2>&1
+            Rscript scripts/Illumina-R-processing.R "{params.left_trunc}" "{params.right_trunc}" "{params.left_maxEE}" "{params.right_maxEE}" "{params.trim_primers}" "{sample_IDs_file}" "{params.trimmed_reads_dir}" "{params.filtered_reads_dir}" "{params.primer_trimmed_R1_suffix}" "{params.primer_trimmed_R2_suffix}" "{params.filtered_R1_suffix}" "{params.filtered_R2_suffix}" "{params.final_outputs_dir}" > {log} 2>&1
             """
 
 else:
@@ -187,7 +187,7 @@ else:
             "R-processing.log"
         shell:
             """
-            Rscript scripts/full-R-processing.R "{params.left_trunc}" "{params.right_trunc}" "{params.left_maxEE}" "{params.right_maxEE}" "{params.trim_primers}" "{sample_IDs_file}" "{params.raw_reads_dir}" "{params.filtered_reads_dir}" "{params.raw_R1_suffix}" "{params.raw_R2_suffix}" "{params.filtered_R1_suffix}" "{params.filtered_R2_suffix}" "{params.final_outputs_dir}" > {log} 2>&1
+            Rscript scripts/Illumina-R-processing.R "{params.left_trunc}" "{params.right_trunc}" "{params.left_maxEE}" "{params.right_maxEE}" "{params.trim_primers}" "{sample_IDs_file}" "{params.raw_reads_dir}" "{params.filtered_reads_dir}" "{params.raw_R1_suffix}" "{params.raw_R2_suffix}" "{params.filtered_R1_suffix}" "{params.filtered_R2_suffix}" "{params.final_outputs_dir}" > {log} 2>&1
             """
 
 

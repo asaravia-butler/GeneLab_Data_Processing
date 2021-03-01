@@ -1,5 +1,5 @@
 ############################################################################################
-## Configuration file for GeneLab Illumina metagenomics processing workflow               ##
+## Configuration file for GeneLab removal of human reads from metagenomic data            ##
 ## Developed by Michael D. Lee (Mike.Lee@nasa.gov)                                        ##
 ############################################################################################
 

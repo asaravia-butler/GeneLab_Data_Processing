@@ -110,7 +110,7 @@ rule run_R:
         "R-processing.log"
     shell:
         """
-        Rscript scripts/full-R-processing.R {input.otus} {params.trimmed_reads_dir} {params.filtered_reads_dir} {params.final_outputs_dir} > {log} 2>&1
+        Rscript scripts/454-IonTorrent-R-processing.R {input.otus} {params.trimmed_reads_dir} {params.filtered_reads_dir} {params.final_outputs_dir} > {log} 2>&1
         """
 
 

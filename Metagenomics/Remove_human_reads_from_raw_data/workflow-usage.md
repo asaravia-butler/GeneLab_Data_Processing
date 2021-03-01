@@ -24,7 +24,7 @@ conda install -c conda-forge -c bioconda -c defaults snakemake
 All files required for utilizing the GeneLab workflow for removing human reads from metagenomics data are in the [workflow-template](workflow-template) directory. To get a copy of that directory on to your system, copy the github web address of that directory, paste it into [GitZip here](http://kinolien.github.io/gitzip/), and then click download.
 
 ### 3. Modify the variables in the config.yaml file
-Once you've downlonaded the workflow template, you can modify the variables in the [config.yaml](workflow-template/config.yaml) file as needed. For example, if you are processing a non-GLDS dataset, you will have to provide a text file containing a single-column list of unique sample identifiers (see an example of how to set this up below - if you are running the example dataset, this file is provided in the [workflow-template](workflow-template) directory [here](workflow-template/unique-sample-names.txt)). You will also need to indicate the paths to your input data (raw reads and the human kraken2 database if it has already been downloaded - if it has not been downloaded, indicate the path to where you want it downloaded) and where to print your output data on your system. Additionally, if necessary, you'll need to modify each variable in the [config.yaml](workflow-template/config.yaml) file to be consistent with the study you want to process and the machine you're using. 
+Once you've downlonaded the workflow template, you can modify the variables in the [config.yaml](workflow-template/config.yaml) file as needed. For example, you will have to provide a text file containing a single-column list of unique sample identifiers (see an example of how to set this up below - if you are running the example dataset, this file is provided in the [workflow-template](workflow-template) directory [here](workflow-template/unique-sample-names.txt)). You will also need to indicate the path to your input data (raw reads) and the root directory for where the kraken2 reference database should be stored (it will be setup automatically). Additionally, if necessary, you'll need to modify each variable in the [config.yaml](workflow-template/config.yaml) file to be consistent with the study you want to process and the machine you're using. 
 
 > Note: If you are unfamiliar with how to specify paths, one place you can learn more is [here](https://astrobiomike.github.io/unix/getting-started#the-unix-file-system-structure).  
 
@@ -54,22 +54,22 @@ Sample-1
 Sample-2
 ```
 
-A quick example (once the reference database has been created or downloaded from above) can be run with the files included in the [workflow-template](workflow-template) directory after specifying a location for the reference database in the [config.yaml](workflow-template/config.yaml) file.
-
 ### 4. Run the workflow
 
-To run the workflow, navigate to the directory holding the Snakefile, config.yaml, and other workflow files that you downloaded in step 2 then run the following command: 
+While in the directory holding the Snakefile, config.yaml, and other workflow files that you downloaded in step 2, here is one example command of how to run the workflow:
 
 ```bash
 snakemake --use-conda --conda-prefix ${CONDA_PREFIX}/envs -j 2 -p
 ```
 
 * `--use-conda` – specifies to use the conda environments included in the workflow (these are specified in the [envs](envs) directory)
-* `--conda-prefix` – indicates where the needed conda environments will be stored. Adding this option will also allow the same conda environments to be re-used when processing additional datasets, rather than makeing new environments each time you run the workflow. The value listed for this option, `${CONDA_PREFIX}/envs`, points to the default location for conda environments (note: the variable `${CONDA_PREFIX}` will be expanded to the appropriate location on whichever system it is run on).
+* `--conda-prefix` – indicates where the needed conda environments will be stored. Adding this option will also allow the same conda environments to be re-used when processing additional datasets, rather than making new environments each time you run the workflow. The value listed for this option, `${CONDA_PREFIX}/envs`, points to the default location for conda environments (note: the variable `${CONDA_PREFIX}` will be expanded to the appropriate location on whichever system it is run on).
 * `-j` – assigns the number of jobs Snakemake should run concurrently (keep in mind that many of the thread and cpu parameters set in the config.yaml file will be multiplied by this)
 * `-p` – specifies to print out each command being run to the screen
 
 See `snakemake -h` and [Snakemake's documentation](https://snakemake.readthedocs.io/en/stable/) for more options and details.
+
+A quick example can be run with the files included in the [workflow-template](workflow-template) directory after specifying a location for the reference database in the [config.yaml](workflow-template/config.yaml) file.
 
 ---
 
