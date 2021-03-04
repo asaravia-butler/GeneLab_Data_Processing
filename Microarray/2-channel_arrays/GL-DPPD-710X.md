@@ -61,49 +61,117 @@ Jonathan Galazka (GeneLab Project Scientist)
 
 ---
 
-# General processing overview with example code  
+## 1. Raw Data Import
 
-The [glds_two_channel_arrays.Rmd](https://developer.nasa.gov/asaravia/GeneLab_Data_Processing/blob/master/Microarray/2-channel_arrays/glds_two_channel_arrays.Rmd) file is an R Markdown Interactive Document for processing GeneLab curated datasets that contain two-color gene expression assays. It can be run within the RStudio IDE with the Knit HTML button or on an R console with the command:  
-rmarkdown::render("glds_two_channel_arrays.Rmd")
-- The [map_annotation.csv](https://developer.nasa.gov/asaravia/GeneLab_Data_Processing/blob/master/Microarray/2-channel_arrays/map_annotation.csv), [organisms.csv](https://developer.nasa.gov/asaravia/GeneLab_Data_Processing/blob/master/Microarray/2-channel_arrays/organisms.csv) and [microarray_functions.R](https://developer.nasa.gov/asaravia/GeneLab_Data_Processing/blob/master/Microarray/2-channel_arrays/microarray_functions.R) files must be in the working directory to run the R Markdown Interactive Document. 
-- Note that the [.Rprofile](https://developer.nasa.gov/asaravia/GeneLab_Data_Processing/blob/master/Microarray/2-channel_arrays/.Rprofile) file must also be present in the working directory in order for the interactive session to accept input files larger than 5 MB.
+### For Agilent GPR Data
+```R
+RG <- read.maimages(files_in_assay, source="genepix", path=path,wt.fun=wtflags(weight=0,cutoff=-50))
+```
+**Parameter Definitions:**
+*	`RG <-` – specifies the variable that will store the results within in our R environment
 
-An html report file and dynamic site will be generated from parameters defined in the manual_entry code block. Interactive parameter selection is available using the Knit with Parameters option. Processed data files will also be exported to the working directory.  
+*	`read.maimages()` – the Limma function we are calling, with the following parameters set within it
 
-Details about design model and normalization function parameters can be found in the [Limma package documentation](https://bioconductor.org/packages/release/bioc/vignettes/limma/inst/doc/usersguide.pdf).  
+*	`files_in_assay` – the filenames of input GPR files
 
-***
-## Input Data and Parameters
+* `source="genepix"` - selects Genepix formatted array data
 
-* **GLDS Accession #** --- GeneLab repository accession number of the dataset or any string to create a seperate output folder (e.g. GLDS-8, GLDS8, Test1)
-* **Organism** --- Supported species annotations are listed in the YAML header
-* **Microarray Data Format** --- The Platform or Scanner file formatting of the raw data. This info can be found in the [GeneLab Data Repository](https://genelab-data.ndc.nasa.gov/genelab/projects) under 'PROTOCOLS', in the 'DESCRIPTION' of the 'image_aquisition' 'TYPE', and the imaging software used can be found in the 'DESCRIPTION' of the 'image_aquisition? array scanning protocol?' 'TYPE'. Gzip compressed files will automatically be extracted.
-  + Agilent GenePix --- Agilent microarray platform imaged with GenePix software
-  + Agilent --- Agilent microarray platform imaged with Agilent software
-  + GenePix --- GenePix software formatting and intensity estimation
-  + Spot --- SPOT software formatting with mean foreground estimation and morph background estimation
-  + Imagene --- Imagene software formatting and intensity estimation
-  + Bluefuse --- Bluefuse software formatting and intensity estimation
-  + Generic --- Generic spot array
-* **Background Correction** --- Options supported by limma. This info can be found in the [GeneLab Data Repository](https://genelab-data.ndc.nasa.gov/genelab/projects) under 'PROTOCOLS', in the 'DESCRIPTION' of the 'feature_extraction - not always there' 'TYPE'
-  + normexp --- Adaptive background correction recommended as the default method.
-  + subtract --- Subtract the background intensity from the foreground intensity for each spot.
-  + morph --- Stabilize the variability of the M-values as a function of intensity.
-* **Within Array Normalization** --- Options supported by limma. This info can be found in the [GeneLab Data Repository](https://genelab-data.ndc.nasa.gov/genelab/projects) under 'PROTOCOLS', in the 'DESCRIPTION' of the 'feature_extraction - is this true for every dataset?' 'TYPE'
-  + loess --- Loess within array normalization recommended for Agilent arrays
-  + printtiploess --- Print-tip recommended in general for others
-  + robustspline ---  An empirical Bayes compromise between print-tip and global loess normalization
-* **Between Array Normalization** --- Options supported by limma. This info can be found in the [GeneLab Data Repository](https://genelab-data.ndc.nasa.gov/genelab/projects) under 'PROTOCOLS', in the 'DESCRIPTION' of the 'feature_extraction - is this true for every dataset?' 'TYPE'
-  + Aquantile --- Recommended as default. Applies quantile normalization to A-values between arrays
-  + quantile --- normalizes directly to the individual red and green intensities
-* **Primary Annotation Keytype** --- Gene identifier type for probe annotation from [Ann.dbi](https://www.bioconductor.org/packages/release/data/annotation/) sources. Mapped keytypes can be inferred from column headers in the probe annotation file or raw data files.
-* **Raw Data Files** --- Select the raw data files to be analyzed. Raw data files for each dataset can be found in the [GeneLab Data Repository](https://genelab-data.ndc.nasa.gov/genelab/projects) under 'STUDY FILES' in the /GeneLab Processed Microarray Data Files/Raw Data/ directory.
-* **Probe Annotation File** --- Select the Annotation file provided by the dataset submitter. This file can be downloaded from the [GeneLab Data Repository](https://genelab-data.ndc.nasa.gov/genelab/projects) for each microarray dataset under 'STUDY FILES' -> 'Microarray Data Files' -> &ast;adf.txt (from [ArrayExpress](https://www.ebi.ac.uk/arrayexpress/)) or GPL*.soft (from [GEO](https://www.ncbi.nlm.nih.gov/geo/)), or a platform specific file supplied by the dataset submitter. If multiple annotation formats are available, GPL is generally preferred.
-* **ISA Metadata File** --- GeneLab ISAtab study metadata file, which can be downloaded from the [GeneLab Data Repository](https://genelab-data.ndc.nasa.gov/genelab/projects) under 'STUDY FILES' -> 'Study Metadata Files' -> *ISA.zip
+* `path=path` - the parent directory path of input files
 
+* `wt.fun=wtflags(weight=0,cutoff=-50)` - function to calculate spot quality weights
 
-***
-## Output Data 
+### For Agilent RAW Data
+```R
+RG <- read.maimages(files_in_assay, source="agilent", path=path)
+```
+**Parameter Definitions:**
+*	`RG <-` – specifies the variable that will store the results within in our R environment
 
-* list and define all output files generated from the script (similar to how all input parameters are listed and defined above)
+*	`read.maimages()` – the Limma function we are calling, with the following parameters set within it
 
+*	`files_in_assay` – the filenames of input RAW files
+
+* `source="genepix"` - selects Agilent formatted array data
+
+* `path=path` - the parent directory path of input files
+
+### For SPOT Data
+```R
+RG <- read.maimages(files_in_assay, source="spot", path=path)
+```
+**Parameter Definitions:**
+*	`RG <-` – specifies the variable that will store the results within in our R environment
+
+*	`read.maimages()` – the Limma function we are calling, with the following parameters set within it
+
+*	`files_in_assay` – the filenames of input GPR files
+
+* `source="spot"` - selects spot formatted array data
+
+* `path=path` - the parent directory path of input files
+
+### For Imagene Data
+```R
+RG <- read.maimages(files_in_assay, source="imagene", path=path)
+```
+**Parameter Definitions:**
+*	`RG <-` – specifies the variable that will store the results within in our R environment
+
+*	`read.maimages()` – the Limma function we are calling, with the following parameters set within it
+
+*	`files_in_assay` – the filenames of input imagene files
+
+* `source="imagene"` - selects imagene formatted array data
+
+* `path=path` - the parent directory path of input files
+
+### For Generic Data
+```R
+RG <- read.maimages(files_in_assay, source="generic", path=path)
+```
+**Parameter Definitions:**
+*	`RG <-` – specifies the variable that will store the results within in our R environment
+
+*	`read.maimages()` – the Limma function we are calling, with the following parameters set within it
+
+*	`files_in_assay` – the filenames of input generic tabular files
+
+* `source="generic"` - selects generic formatted array data
+
+* `path=path` - the parent directory path of input files
+
+### For Genepix Data
+```R
+RG <- read.maimages(files_in_assay,source="genepix",path = path,wt.fun=wtflags(weight=0,cutoff=-50))
+```
+**Parameter Definitions:**
+*	`RG <-` – specifies the variable that will store the results within in our R environment
+
+*	`read.maimages()` – the Limma function we are calling, with the following parameters set within it
+
+*	`files_in_assay` – the filenames of input GPR files
+
+* `source="genepix"` - selects genepix formatted array data
+
+* `path=path` - the parent directory path of input files
+
+* `wt.fun=wtflags(weight=0,cutoff=-50)` - function to calculate spot quality weights
+
+### For Nimblegen Data
+```R
+RG <-  Ringo::readNimblegen(hybesFile = "nimblegen_targets.txt",spotTypesFile = "spottypes.txt",path = path, headerPattern = "# software=DEVA", verbose = TRUE)
+```
+**Parameter Definitions:**
+*	`RG <-` – specifies the variable that will store the results within in our R environment
+
+*	`Ringo::readNimblegen()` – the Ringo function we are calling, with the following parameters set within it
+
+*	`hybesFile = "nimblegen_targets.txt"` – metadata file in Limma targets format
+
+* `spotTypesFile = "spottypes.txt"` - metadata file in Limma spottypes format
+
+* `path=path` - the parent directory path of input files
+
+* `headerPattern = "# software=DEVA"` - pattern used to identify explantory header lines in the supplied pair-format files
+
+* `verbose = TRUE` - progress output to STDOUT
