@@ -10,10 +10,10 @@ The [NASA GeneLab](https://genelab.nasa.gov/) Data Processing team and [Analysis
 
 ## Assay Types
 Click on an assay type below for data processing information.  
-- Amplicon Sequencing 
+- [Amplicon Sequencing](Amplicon) 
   - [Illumina](Amplicon/Illumina)  
   - [454 and Ion-Torrent](Amplicon/454-and-IonTorrent)  
-- Metagenomics  
+- [Metagenomics](Metagenomics)  
   - [Removing human reads](Metagenomics/Remove_human_reads_from_raw_data)  
   - [Illumina](Metagenomics/Illumina)  
 - [RNAseq](RNAseq)  
