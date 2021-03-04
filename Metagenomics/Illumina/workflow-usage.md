@@ -37,7 +37,7 @@ Once you've downlonaded the workflow template, you can modify the variables in y
 
 **Example for how to create a single-column list of unique sample identifiers from your raw data file names**
 
-For example, if you have paired-end read data for 2 samples located in `../Raw_Data/` relative to our workflow directory, that look like this:
+For example, if you have paired-end read data for 2 samples located in `../Raw_Data/` relative to your workflow directory, that look like this:
 
 ```bash
 ls ../Raw_Data/
