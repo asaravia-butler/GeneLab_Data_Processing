@@ -109,21 +109,21 @@ workdir <- file.path(getwd())
 which_assay <- 1 # for studies with multiple two-channel microarrays
 
 opt <- list()
-opt$glds <-"GLDS-81"
-opt$organism <- "Bacillus subtilis"
-opt$format <- "Agilent"
-opt$model <- "Separate Channels"
+opt$glds <-"GLDS-76"
+opt$organism <- "Danio rerio"
+opt$format <- "Agilent GenePix"
+opt$model <- "Common Reference"
 opt$background_correction <- "normexp"
 opt$normalization_within <- "loess"
 opt$normalization_between <- "Aquantile"
-opt$primary <- "ALIAS"
+opt$primary <- "ACCNUM"
 opt$filter_nonexpressed <- TRUE
 opt$filter_control <- TRUE
 opt$filter_nonannotated <- TRUE
-opt$datafiles$name <- list.files(file.path(getwd(),"demo_dataset",opt$glds,"00-RawData"),pattern = "*raw.txt",full.names = FALSE )
-opt$datafiles$datapath <- list.files(file.path(getwd(),"demo_dataset",opt$glds,"00-RawData"),pattern = "raw.txt",full.names = TRUE )
-opt$probefile$name <- list.files(file.path(getwd(),"demo_dataset",opt$glds,"Metadata"),pattern = "*.annot.txt",full.names = FALSE )
-opt$probefile$datapath <- list.files(file.path(getwd(),"demo_dataset",opt$glds,"Metadata"),pattern = "*.annot.txt",full.names = TRUE )
+opt$datafiles$name <- list.files(file.path(getwd(),"demo_dataset",opt$glds,"00-RawData"),pattern = "*raw.gpr",full.names = FALSE )
+opt$datafiles$datapath <- list.files(file.path(getwd(),"demo_dataset",opt$glds,"00-RawData"),pattern = "raw.gpr",full.names = TRUE )
+opt$probefile$name <- list.files(file.path(getwd(),"demo_dataset",opt$glds,"Metadata"),pattern = "*.soft",full.names = FALSE )
+opt$probefile$datapath <- list.files(file.path(getwd(),"demo_dataset",opt$glds,"Metadata"),pattern = "*.soft",full.names = TRUE )
 opt$isafile$name <- list.files(file.path(getwd(),"demo_dataset",opt$glds,"Metadata"),pattern = "*ISA.zip",full.names = FALSE )
 opt$isafile$datapath <- list.files(file.path(getwd(),"demo_dataset",opt$glds,"Metadata"),pattern = "*ISA.zip",full.names = TRUE )
 
@@ -241,8 +241,7 @@ if (grepl("\\.soft$", opt$probefile$name) || grepl("\\.gpl.txt$", opt$probefile$
       #   }
       # }
       probedata <- probedata[with(probedata, order(ROW,COL)),] # sort by row & col to match RG order
-      probedata <- probedata@data
-      RG$genes <- dplyr::left_join(RG$genes,probedata,by = c("GeneName" = "ORF"))
+      RG$genes <- dplyr::left_join(RG$genes,probedata,by = c("Name" = "NAME"))
       #rm(fields,glds_header,index,key)
   })
 } 
@@ -258,9 +257,9 @@ if (grepl("\\.ngd$", opt$probefile$name)){
   colnames(probedata)[1:2]<- c("PROBE_ID",opt$primary)
 }
 
-try({
-  RG$genes <- cbind(RG$genes,probedata[,which(!(colnames(probedata) %in% colnames(RG$genes)))])
-})
+# try({
+#   RG$genes <- cbind(RG$genes,probedata[,which(!(colnames(probedata) %in% colnames(RG$genes)))])
+# })
 rm(map.ann)
 ```
 
@@ -297,9 +296,11 @@ for (column in 1:ncol(RG)){
 invisible(dev.off())
 
 ########## Create Array Info File
-info <-opt
-info[12:13]<-NULL
-write.table(info,file = "arrayInfo.txt", quote = FALSE)
+fileConn<-file("arrayInfo.txt")
+try(writeLines(c(opt$format,opt$model), fileConn))
+close(fileConn)
+
+
 
 rm(column,path,printrows,width,info)
 
@@ -312,9 +313,9 @@ path <- file.path(workdir,"Processed_Data",opt$glds,"00-RawData","QC_Repports")
 setwd(path)
 
 ########## Create Expression Density Plots
-plotDensities(RG)
-png(file = "rawDensityDistributions.png")
-plotDensities(RG)
+plotDensities(RG, group = targets$t1$FileName, legend="topright")
+png(file = "rawDensityDistributions.png", width = 1000, height = 400)
+plotDensities(RG, group = targets$t1$FileName, legend="topright")
 invisible(dev.off())
 ```
 
@@ -325,13 +326,13 @@ path <- file.path(workdir,"Processed_Data",opt$glds,"00-RawData","QC_Repports")
 setwd(path)
 
 ########## Create Raw Data Boxplot
-boxplot(data.frame(log2(RG$G)),main="Green", las=2,outline=FALSE)
-boxplot(data.frame(log2(RG$R)),main="Red", las=2,outline=FALSE)
+boxplot(data.frame(log2(RG$G)),main="Green Channel", las=2,outline=FALSE, col="green", names=targets$t2$FileName)
+boxplot(data.frame(log2(RG$R)),main="Red Channel", las=2,outline=FALSE, col="red",names=targets$t2$FileName)
 
 png(file = "rawBoxplot.png", width = 2000, height = 2000)
 par(mfrow = c(2,1),mar=c(50,5,5,5))
-boxplot(data.frame(log2(RG$G)),main="Green", las=2,outline=FALSE)
-boxplot(data.frame(log2(RG$R)),main="Red", las=2,outline=FALSE)
+boxplot(data.frame(log2(RG$G)),main="Green Channel", las=2,outline=FALSE, col="green",names=targets$t2$FileName)
+boxplot(data.frame(log2(RG$R)),main="Red Channel", las=2,outline=FALSE, col="red",names=targets$t2$FileName)
 invisible(dev.off)
 
 ########## Create Checksum file
@@ -358,12 +359,16 @@ imageplot(log2(RG$Gb[,column]), RG$printer, main=colnames(RG)[column],zlim = c(1
 
 printrows <- ceiling(ncol(RG)/4)
 width <- 2000
-png(file = "images.png", width = width, height = ceiling(width/4)*printrows)
-par(mfrow = c(printrows,4),mar=c(5,5,5,5))
+
+
+
 for (column in 1:ncol(RG)){
+png(file = paste0(colnames(RG)[column],".png"), width = width, height = ceiling(width/4)*printrows)
+par(mar=c(5,5,5,5))
 imageplot(log2(RG$Gb[,column]), RG$printer, main=colnames(RG)[column],zlim = c(1,log2(max(RG$Gb))))
-  }
 invisible(dev.off())
+  }
+
 
 rm(column,printrows,width,path)
 ```
@@ -385,9 +390,10 @@ if(!require(ann.dbi, character.only=TRUE)) {
 ### Map annotations from primary keytype
 
 try(annotation<-data.frame(ID=RG$genes$ID)) #assumes Array ID is primary annotation
-try(annotation<-data.frame(ID=RG$genes$Name)) #assumes Array ID is primary annotation
 try(annotation<-data.frame(ID=RG$genes$GeneName))
 try(annotation<-data.frame(ID=RG$genes[,keytype]))
+try(annotation<-data.frame(ID=RG$genes$Name)) #assumes Array ID is primary annotation
+
 annotation$ID <- sub("\\.\\d+", "", annotation$ID) #remove any version suffixes from IDs
 
 
@@ -418,7 +424,7 @@ annotation.subset <- annotation
 RG.annotated <- RG
 
 
-rm(ann.dbi,keytype,organism_table)
+#rm(ann.dbi,keytype,organism_table)
 ```
 
 
@@ -438,6 +444,7 @@ MA <- normalizeBetweenArrays(MA, method=opt$normalization_between)
 annotation_stats <- list()
 annotation_stats$total_features <- dim(MA$M)[1]
 MA.summarized <- MA
+MA.summarized$genes<-annotation.subset
 ```
 
 
@@ -450,26 +457,31 @@ MA.summarized <- MA
 
 if (opt$filter_control){
   #try(MA.summarized <- MA.summarized[annotation1$CONTROL_TYPE == FALSE,])
-  filter <- which(!(MA.summarized$genes$CONTROLTYPE %in% c("pos","neg")))
-  MA.summarized<- MA.summarized[filter,]
-  annotation.subset <- annotation.subset[filter,]
+  try({
+    filter <- which(!(MA.summarized$genes$CONTROLTYPE %in% c("pos","neg")))
+    MA.summarized<- MA.summarized[filter,]
+    annotation.subset <- annotation.subset[filter,]})
 }
 
 ### Filter out non-annotated probes
 if (opt$filter_nonannotated){
-  try(MA.summarized <- MA.summarized[!is.na(MA.summarized$genes$ENTREZID),])
-  annotation.subset <- annotation.subset[!is.na(MA.summarized$genes$ENTREZID),]
+  try({
+    MA.summarized <- MA.summarized[!is.na(MA.summarized$genes$ENTREZID),]
+    annotation.subset <- MA.summarized$genes
+    annotation_stats$annotated_genes <- dim(MA.summarized)[1]
+    })
 }
 
 
 ### For replicate probes in each sample, replace values with the average
 
-# MA.summarized <- avereps(MA.summarized, ID = MA.summarized$genes$ID)
-# annotation_stats$unique_probes <- dim(MA.summarized)[1]
+MA.summarized <- avereps(MA.summarized, ID = MA.summarized$genes$ID)
+annotation.subset <- MA.summarized$genes
+annotation_stats$unique_probes <- dim(MA.summarized)[1]
 
 # Summarise over gene names (averaging counts over transcripts)
 #MA.summarized <- avereps(MA.summarized, ID = MA.summarized$genes$SYMBOL)
-#annotation_stats$annotated_genes <- dim(MA.summarized)[1]
+#
 
 
 ```
@@ -485,14 +497,14 @@ setwd(file.path(workdir,"Processed_Data",opt$glds,"01-NormalizedData"))
 colnames(annotation.subset)[1]<-opt$primary
 #annotation.subset <-apply(annotation.subset, 1, unlist)
 expression <- as.data.frame(MA.summarized$M)
-write.csv(expression,"normalized.txt",quote=FALSE, append=FALSE)
+write.table(expression,"normalized.txt",quote=FALSE, append=FALSE, sep = "\t", col.names=NA)
 
 ######### Write out annotated expression values
 
 #annotation.subset <- dplyr::select(MA.summarized$genes, contains(c("ENSEMBL","ACCNUM","REFSEQ","SYMBOL","GENENAME","ENTREZID","TAIR","GOSLIM_ID","STRING_ID")))
-expression <- unlist(cbind(annotation.subset,expression))
+expression <- cbind(annotation.subset,expression)
 
-write.csv(expression,"normalized-annotated.txt",quote=FALSE, append = FALSE)
+write.table(expression,"normalized-annotated.txt",quote=FALSE, append=FALSE, sep = "\t", row.names = FALSE)
 
 ######### Write out annotated MA file
 save(MA.summarized,file = "normalized-annotated.rda")
@@ -518,8 +530,13 @@ for (column in 1:ncol(MA)){
 invisible(dev.off())
 
 ######### Write Annotation Report File
-write.table(annotation_stats,file = "annotReport.txt", quote = FALSE)
-
+path <- file.path(workdir,"Processed_Data",opt$glds,"01-NormalizedData","QC_Repports")
+setwd(path)
+annotation_stats$numRemoved <- annotation_stats$total_features - annotation_stats$annotated_genes
+annotation_stats$numDupsRemoved <- annotation_stats$numRemoved - annotation_stats$unique_probes
+fileConn<-file("annotReport.txt")
+writeLines(c("This microarray experiment was annotated with the R package: ",ann.dbi, "\nUnmapped probes removed: ", annotation_stats$numRemoved, "\nDuplicated probes removed: ", annotation_stats$numDupsRemoved, "\nAnnotated probes remaining: ",annotation_stats$unique_probes), fileConn)
+close(fileConn)
 
 rm(column,path,printrows,width)
 
@@ -528,27 +545,29 @@ rm(column,path,printrows,width)
 # Normalized Data Density Plot
 ```{r norm_density, eval=exists("MA"), message=FALSE, warning=FALSE}
 ########## Create Expression Density Plots
-plotDensities(MA)
+plotDensities(MA, group = targets$t1$FileName, legend="topright")
 path <- file.path(workdir,"Processed_Data",opt$glds,"01-NormalizedData","QC_Repports")
 setwd(path)
-png(file = "normDensityDistributions.png")
-plotDensities(MA)
+png(file = "normDensityDistributions.png", width = 1000, height = 400)
+plotDensities(MA, group = targets$t1$FileName, legend="topright")
 invisible(dev.off())
+
+
 ```
 
 
 # Normalized Data Box Plot
 ```{r norm_boxplot, eval=exists("MA"), message=FALSE, warning=FALSE}
 ########## Create Raw Data Boxplot
-boxplot(data.frame(log2(RG.MA(MA)$G)),main="Green", las=2,outline=FALSE)
-boxplot(data.frame(log2(RG.MA(MA)$R)),main="Red", las=2,outline=FALSE)
+boxplot(data.frame(log2(RG.MA(MA)$G)),main="Green Channel", las=2,outline=FALSE, col="green",names=targets$t2$FileName)
+boxplot(data.frame(log2(RG.MA(MA)$R)),main="Red Channel", las=2,outline=FALSE, col="red",names=targets$t2$FileName)
 
-path <- file.path(workdir,"Processed_Data",opt$glds,"00-RawData","QC_Repports")
+path <- file.path(workdir,"Processed_Data",opt$glds,"01-NormalizedData","QC_Repports")
 setwd(path)
 png(file = "normBoxplot.png", width = 2000, height = 2000)
 par(mfrow = c(2,1),mar=c(50,5,5,5))
-boxplot(data.frame(log2(RG.MA(MA)$G)),main="Green", las=2,outline=FALSE)
-boxplot(data.frame(log2(RG.MA(MA)$R)),main="Red", las=2,outline=FALSE)
+boxplot(data.frame(log2(RG.MA(MA)$G)),main="Green Channel", las=2,outline=FALSE, col="green",names=targets$t2$FileName)
+boxplot(data.frame(log2(RG.MA(MA)$R)),main="Red Channel", las=2,outline=FALSE, col="red",names=targets$t2$FileName)
 invisible(dev.off)
 
 rm(path)
@@ -599,15 +618,15 @@ if (opt$model == "Replicate Array"){
 
 if (opt$model == "Common Reference"){
   try({
-  targets <- data.frame(lapply(targets, as.character), stringsAsFactors=FALSE)
-  
-  targets2<-targets
-  targets2[,2]<- paste0("(",targets2[,2],")")
-  targets2[,3]<- paste0("(",targets2[,3],")")
-
-  targets3<-targets2
-  targets3[,2]<-make.names(targets2[,2],unique = FALSE, allow_ = TRUE)
-  targets3[,3]<-make.names(targets2[,3],unique = FALSE, allow_ = TRUE)
+  # targets <- data.frame(lapply(targets, as.character), stringsAsFactors=FALSE)
+  # 
+  # targets2<-targets
+  # targets2[,2]<- paste0("(",targets2[,2],")")
+  # targets2[,3]<- paste0("(",targets2[,3],")")
+  # 
+  # targets3<-targets2
+  # targets3[,2]<-make.names(targets2[,2],unique = FALSE, allow_ = TRUE)
+  # targets3[,3]<-make.names(targets2[,3],unique = FALSE, allow_ = TRUE)
 
   uu<-unique(targets2[,2])
   uuu1<-unique(targets3[,2])
@@ -659,6 +678,7 @@ if (opt$model == "Separate Channels"){
     keep <- fit$Amean > CutOff
     fit <- fit[keep,] # filter out probes below cutoff expression level
     annotation.subset <- annotation.subset[keep,]
+    MA.summarized <- MA.summarized[keep,]
     }
     
     ######## Create Contrast Model
@@ -698,18 +718,39 @@ setwd(file.path(workdir,"Processed_Data",opt$glds,"02-Limma_DGE"))
 # reduced_output_table <- annotation.subset[,-c(1)]
 output_table <- annotation.subset
 reduced_output_table <- annotation.subset
+output_table <- cbind(output_table,as.data.frame(MA.summarized$A))
+reduced_output_table <- cbind(reduced_output_table,as.data.frame(MA.summarized$A))
 
-output_table$All.mean <- fit$Amean
-reduced_output_table$All.mean <- fit$Amean
 
-output_table$All.stdev <- fit$s2.post
-reduced_output_table$All.stdev <- fit$s2.post
+output_table$All.mean <- contrast.fit$Amean
+reduced_output_table$All.mean <- contrast.fit$Amean
 
-output_table$F.p.value <- fit$F.p.value
-reduced_output_table$F.p.value <- fit$F.p.value
+output_table$All.stdev <- contrast.fit$s2.post
+reduced_output_table$All.stdev <- contrast.fit$s2.post
+
+output_table$F.p.value <- contrast.fit$F.p.value
+reduced_output_table$F.p.value <- contrast.fit$F.p.value
+
+if (opt$model == "Separate Channels"){
+ 
+########## Add Group Mean Values
+group_means<-as.data.frame(fit$coefficients)
+colnames(group_means)<-paste0("Group.Mean_",uu)
+output_table<-cbind(output_table,group_means)
+reduced_output_table<-cbind(reduced_output_table,group_means)
+rm(group_means)
+
+# add group stdev columns
+group_stdev<-as.data.frame(fit$stdev.unscaled * fit$coefficients)
+colnames(group_stdev)<-paste0("Group.Stdev_",uu)
+output_table<-cbind(output_table,group_stdev)
+reduced_output_table<-cbind(reduced_output_table,group_stdev)
+rm(group_stdev)  
+  
+}
 
 if (opt$model == "Replicate Array"){
-  uu<-uu[1]
+ uu<-uu[1]
 ########## Add Group Mean Values
 group_means<-as.data.frame(fit$coefficients)
 colnames(group_means)<-paste0("Group.Mean_",uu)
