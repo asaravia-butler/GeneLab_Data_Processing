@@ -71,39 +71,282 @@ This version adds processing capability for additional Affymetrix ST type platfo
 
 ---
 
-# General processing overview with example code  
+## 1. Raw Data Import
 
-The [glds_one_channel_arrays.Rmd](https://developer.nasa.gov/asaravia/GeneLab_Data_Processing/blob/master/Microarray/1-channel_arrays/glds_one_channel_arrays.Rmd) file is an R Markdown Interactive Document for processing GeneLab curated datasets that contain one-color gene expression assays. It can be run within the RStudio IDE with the Knit HTML button or on an R console with the command:  
-rmarkdown::render("glds_one_channel_arrays.Rmd")
-- The [map_annotation.csv](https://developer.nasa.gov/asaravia/GeneLab_Data_Processing/blob/master/Microarray/1-channel_arrays/map_annotation.csv),[organisms.csv](https://developer.nasa.gov/asaravia/GeneLab_Data_Processing/blob/master/Microarray/1-channel_arrays/organisms.csv) and [microarray_functions.R](https://developer.nasa.gov/asaravia/GeneLab_Data_Processing/blob/master/Microarray/1-channel_arrays/microarray_functions.R) files must be in the working directory to run the R Markdown Interactive Document. 
-- Note that the .Rprofile file must also be present in the working directory in order for the interactive session to accept input files larger than 5 MB.
+### For Affymetrix CEL Data
+```R
+raw <- oligo::read.celfiles(datapaths)
+```
+**Parameter Definitions:**
+*	`raw <-` – specifies the variable that will store the results within in our R environment
 
-An html report file and dynamic site will be generated from parameters defined in the manual_entry code block. Interactive parameter selection is available using the Knit with Parameters option. Processed data files will also be exported to the working directory.  
+*	`read.celfiles()` – the Oligo function we are calling, with the following parameters set within it
 
-Details about design model and normalization function parameters can be found in the [Limma package documentation](https://bioconductor.org/packages/release/bioc/vignettes/limma/inst/doc/usersguide.pdf).  
+*	`datapaths` – the paths of input CEL files
 
-***
-## Input Data and Parameters
+### For NimbleGen XYS Data
+```R
+raw <- oligo::read.xysfiles(datapaths)
+```
+**Parameter Definitions:**
+*	`raw <-` – specifies the variable that will store the results within in our R environment
 
-* **GLDS Accession #** --- GeneLab repository accession number of the dataset or any string to create a seperate output folder (e.g. GLDS-8, GLDS8, Test1)
-* **Organism** --- Supported species annotations are listed in the YAML header
-* **Microarray Data Format** --- The Platform or Scanner file formatting of the raw data. This info can be found in the [GeneLab Data Repository](https://genelab-data.ndc.nasa.gov/genelab/projects) under 'PROTOCOLS', in the 'DESCRIPTION' of the 'nucleic acid hybridization' 'TYPE'. Gzip compressed files will automatically be extracted.
-  + Affymetrix Expression --- 3'-IVT type arrays; have probesets targeting the 3' end of transcripts
-  + Affymetrix ST --- Gene or Exon type arrays; have probesets with greater coverage of transcripts
-  + NimbleGen --- NimbleGen platform data in XYS or PAIR format
-  + Illumina BeadChip --- Illumina platform expression data in IDAT or TXT formats
-  + Agilent GenePix --- Agilent microarray platform in GPR format
-  + Agilent --- Agilent microarray platform in TXT format
-* **Study Design** --- Model to use when analyzing differential gene expression
-  + Group Contrast --- Groups are defined by concatenation of study factor variables for each sample. Differential gene expression analysis is performed between all group pairs. This is suggested as default.
-  + Repeated Measures --- Group contrast analysis with a paired sample parameter
-* **Primary Annotation Keytype** --- Gene identifier type for probe annotation from [Ann.dbi](https://www.bioconductor.org/packages/release/data/annotation/) sources. Mapped keytypes can be inferred from column headers in the probe annotation file or raw data files. 
-* **Raw Data Files** --- Select the raw data files to be analyzed. Raw data files for each dataset can be found in the [GeneLab Data Repository](https://genelab-data.ndc.nasa.gov/genelab/projects) under 'STUDY FILES' in the /GeneLab Processed Microarray Data Files/Raw Data/ directory
-* **Probe Annotation File** --- Select the Annotation file provided by the dataset submitter. This file can be downloaded from the [GeneLab Data Repository](https://genelab-data.ndc.nasa.gov/genelab/projects) for each microarray dataset under 'STUDY FILES' -> 'Microarray Data Files' -> &ast;adf.txt (from [ArrayExpress](https://www.ebi.ac.uk/arrayexpress/)) or GPL*.soft (from [GEO](https://www.ncbi.nlm.nih.gov/geo/)), or a platform specific file supplied by the dataset submitter.
-* **ISA Metadata File** --- GeneLab ISAtab study metadata file, which can be downloaded from the [GeneLab Data Repository](https://genelab-data.ndc.nasa.gov/genelab/projects) under 'STUDY FILES' -> 'Study Metadata Files' -> *ISA.zip
+*	`read.xysfiles()` – the Oligo function we are calling, with the following parameters set within it
 
-***
-## Output Data 
+*	`datapaths` – the paths of input XYS files
 
-* list and define all output files generated from the script (similar to how all input parameters are listed and defined above)
+### For NimbleGen PAIR Data
+```R
+raw <- HELP::readPairs(datapaths)
+```
+**Parameter Definitions:**
+*	`raw <-` – specifies the variable that will store the results within in our R environment
+
+*	`readPairs()` – the HELP function we are calling, with the following parameters set within it
+
+*	`datapaths` – the paths of input XYS files
+
+### For Agilent RAW Data
+```R
+raw<-limma::read.maimages(filenames, source="agilent", path=dirname, green.only=TRUE, samplenames)
+```
+**Parameter Definitions:**
+*	`raw <-` – specifies the variable that will store the results within in our R environment
+
+*	`read.maimages()` – the Limma function we are calling, with the following parameters set within it
+
+*	`filenames` – the names of input RAW files
+
+* `source="agilent"` - selects the Agilent data format
+
+* `path=dirname` - the directory path containing input files
+
+* `green.only=TRUE` - specifies single channel data
+
+* `samplenames` - sample names associated with each array
+
+### For Agilent GPR Data
+```R
+raw<-limma::read.maimages(filenames, source="genepix", path=dirname, wt.fun=wtflags(weight=0,cutoff=-50), green.only=TRUE, names = samplenames)
+```
+**Parameter Definitions:**
+*	`raw <-` – specifies the variable that will store the results within in our R environment
+
+*	`read.maimages()` – the Limma function we are calling, with the following parameters set within it
+
+*	`filenames` – the names of input RAW files
+
+* `source="genepix"` - selects the GenePix data format
+
+* `path=dirname` - the directory path containing input files
+
+* `wt.fun=wtflags(weight=0,cutoff=-50)` - flags spots at cutoff intensity for normalization
+
+* `green.only=TRUE` - specifies single channel data
+
+* `samplenames` - sample names associated with each array
+
+### For Illumina BeadChip TXT Data
+```R
+raw <- read.ilmn(filenames, ctrlfiles, path=dirname,ctrpath=dirname,probeid="Probe",annotation=c("TargetID", "SYMBOL"),expr="AVG_Signal",sep="\t", quote="\"")
+```
+**Parameter Definitions:**
+*	`raw <-` – specifies the variable that will store the results within in our R environment
+
+*	`read.ilmn()` – the Limma function we are calling, with the following parameters set within it
+
+*	`filenames` – the names of the summary probe profile files
+
+* `ctrlfiles` - the names of the summary control probe profile files
+
+* `path=dirname` - the directory path containing input files
+
+* `ctrpath=dirname` - the directory path containing input control probe files
+
+* `probeid="Probe"` - the name of the probe identifier column
+
+* `annotation=c("TargetID", "SYMBOL")` - the names of probe annotation columns
+
+* `expr="AVG_Signal"` - the expression intensity column name
+
+* `sep="\t"` - selects tab delimited format
+
+* `quote="\""` - selects quote character
+
+### For Illumina BeadChip IDAT Data
+```R
+raw <- read.idat(datapaths, bgxfile, annotation = c("RefSeq_ID","Symbol","Entrez_Gene_ID","Definition"),tolerance = 0L)
+```
+**Parameter Definitions:**
+*	`raw <-` – specifies the variable that will store the results within in our R environment
+
+*	`read.idat()` – the Limma function we are calling, with the following parameters set within it
+
+*	`datapaths` – the paths of input IDAT files
+
+* `bgxfile` - the bead manifest file (.bgx) to be read in
+
+* `annotation = c("RefSeq_ID","Symbol","Entrez_Gene_ID","Definition")` - the names of probe annotation columns
+
+* `tolerance = 0L` - the number of probe ID discrepancies allowed between the manifest and any of the IDAT files
+
+## 2. Background Correction and Normalization
+
+### For Affymetrix Expression Array Data
+```R
+data <- oligo::rma(raw, normalize = TRUE, background = TRUE)
+```
+**Parameter Definitions:**
+*	`data <-` – specifies the variable that will store the results within in our R environment
+
+*	`rma()` – the Oligo function we are calling, with the following parameters set within it
+
+*	`raw` – raw data object generated in 1.
+
+* `normalize = TRUE` - perform quantiles method normalization
+
+* `background = TRUE` - perform RMA background correction
+
+### For Affymetrix ST Array Data
+```R
+data <- oligo::rma(raw, target = "core", background=TRUE, normalize=TRUE)
+```
+**Parameter Definitions:**
+*	`data <-` – specifies the variable that will store the results within in our R environment
+
+*	`rma()` – the Oligo function we are calling, with the following parameters set within it
+
+*	`raw` – raw data object generated in 1.
+
+* `target = "core"` - perform gene level summarization
+
+* `normalize = TRUE` - perform quantiles method normalization
+
+* `background = TRUE` - perform RMA background correction
+
+### For Agilent Array Data
+```R
+data <- backgroundCorrect(raw, method="normexp", offset=50)
+data <- normalizeBetweenArrays(data, method="quantile")
+```
+**Parameter Definitions:**
+*	`data <-` – specifies the variable that will store the results within in our R environment
+
+*	`backgroundCorrect()` – the Limma function for background correction
+
+*	`raw` – raw data object generated in 1.
+
+* `method="normexp"` - perform normexp background correction
+
+* `offset=50` - set offset value for background correction
+
+*	`normalizeBetweenArrays()` – the Limma function for cross array normalization
+
+* `method="quantile"` - perform quantile normalization
+
+## 3. Data Filtering
+```R
+data.filt <- genefilter::nsFilter(data, require.entrez=TRUE,
+    remove.dupEntrez=TRUE, var.func=IQR,
+    var.cutoff=0.5, var.filter=TRUE,
+    filterByQuantile=TRUE, feature.exclude="^AFFX")
+```
+**Parameter Definitions:**
+*	`data.filt <-` – specifies the variable that will store the results within in our R environment
+
+*	`nsFilter()` – the genefilter function we are calling, with the following parameters set within it
+
+*	`data` – normalized data object generated in 2.
+
+* `require.entrez=TRUE` - filter unannotated probes
+
+* `remove.dupEntrez=TRUE` - filter duplicate gene level values
+
+*	`var.func=IQR` – select probes by maximum interquartile range
+
+* `var.cutoff=0.5` - set variance filter cutoff
+
+*	`var.filter=TRUE` – filter by variance function
+
+* `filterByQuantile=TRUE` - filter by quantiles
+
+* `feature.exclude="^AFFX"` - filter control probes
+
+## 4. Differential Gene Expression
+
+### Fit Linear Model
+
+```R
+fit <- lmFit(data.filt, design)
+```
+**Parameter Definitions:**
+*	`fit <-` – specifies the variable that will store the results within in our R environment
+
+*	`lmFit()` – the Limma function we are calling, with the following parameters set within it
+
+*	`data.filt` – filtered data object generated in 3.
+
+* `design` - model matrix defining group membership and pairing of samples
+
+### Generate Contrast Matrix
+
+```R
+cont.matrix <- makeContrasts(contrasts = contrasts,levels=design)
+```
+**Parameter Definitions:**
+*	`cont.matrix <-` – specifies the variable that will store the results within in our R environment
+
+*	`makeContrasts()` – the Limma function we are calling, with the following parameters set within it
+
+*	`contrasts` – formatted list of design group name pairs
+
+* `levels` - model matrix defining group membership and pairing of samples
+
+### Fit Contrasts to Linear Model
+
+```R
+contrast.fit <- contrasts.fit(fit, cont.matrix)
+```
+**Parameter Definitions:**
+*	`contrast.fit <-` – specifies the variable that will store the results within in our R environment
+
+*	`contrasts.fit()` – the Limma function we are calling, with the following parameters set within it
+
+*	`fit` – fit linear model object generated above
+
+* `cont.matrix` - contrast matrix object generated above
+
+### Perform Empirical Bayes Moderation
+
+```R
+contrast.fit <- eBayes(contrast.fit)
+```
+**Parameter Definitions:**
+*	`contrast.fit <-` – specifies the variable that will store the results within in our R environment
+
+*	`eBayes()` – the Limma function we are calling, with the following parameters set within it
+
+*	`contrast.fit` – contrast fit linear model object generated above
+
+### Generate Differential Expression Tables
+
+```R
+top <- topTable(contrast.fit, coef = i, number = Inf, genelist = contrast.fit$genes$ID, adjust.method = "BH", sort.by = "none")
+```
+**Parameter Definitions:**
+*	`top <-` – specifies the variable that will store the results within in our R environment
+
+*	`topTable()` – the Limma function we are calling, with the following parameters set within it
+
+*	`contrast.fit` – contrast fit linear model object generated above
+
+* `coef =i` - index of group contrast to perform statistical tests on
+
+* `number = Inf` - perform tests for all genes
+
+* `genelist = contrast.fit$genes$ID` - choose annotation names for test genes
+
+* `adjust.method = "BH"` - perform Benjamini Hochberg multiple hypothesis correction of p-values
+
+* `sort.by = "none"` - maintain gene order from contrast.fit for all contrast indexes
 

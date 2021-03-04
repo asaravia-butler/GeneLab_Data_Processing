@@ -94,19 +94,19 @@ workdir <- "/Users/hfogle/R_Docs/one_channel_arrays"    # For testing
 which_assay <- 1 # for studies with multiple two-channel microarrays
 opt <- list()
 
-opt$glds <-"GLDS-225"
-opt$organism <- "Rattus norvegicus"
-opt$format <- "Affymetrix ST"
+opt$glds <-"GLDS-121"
+opt$organism <- "Arabidopsis thaliana"
+opt$format <- "Affymetrix Expression"
 opt$model <- "Group Contrast"
 opt$estimation <- "Max IQR"
-opt$primary <- "REFSEQ"
+opt$primary <- "TAIR"
 opt$filter_nonexpressed <- TRUE
 opt$filter_control <- TRUE
 opt$filter_nonannotated <- TRUE
-opt$datafiles$name <- list.files(file.path(workdir,"demo_dataset",opt$glds,"00-RawData"),pattern = c("*CEL"),full.names = FALSE )
-opt$datafiles$datapath <- list.files(file.path(workdir,"demo_dataset",opt$glds,"00-RawData"),pattern = c("*CEL"),full.names = TRUE )
-opt$probefile$name <- list.files(file.path(workdir,"demo_dataset",opt$glds,"Metadata"),pattern = "*db.tar.gz",full.names = FALSE )
-opt$probefile$datapath <- list.files(file.path(workdir,"demo_dataset",opt$glds,"Metadata"),pattern = "*db.tar.gz",full.names = TRUE )
+opt$datafiles$name <- list.files(file.path(workdir,"demo_dataset",opt$glds,"00-RawData"),pattern = c("*CEL","*CEL.gz"),full.names = FALSE )
+opt$datafiles$datapath <- list.files(file.path(workdir,"demo_dataset",opt$glds,"00-RawData"),pattern = c("*CEL","*CEL.gz"),full.names = TRUE )
+opt$probefile$name <- list.files(file.path(workdir,"demo_dataset",opt$glds,"Metadata"),pattern = "*db.annotation.tar.gz",full.names = FALSE )
+opt$probefile$datapath <- list.files(file.path(workdir,"demo_dataset",opt$glds,"Metadata"),pattern = "*db.annotation.tar.gz",full.names = TRUE )
 opt$isafile$name <- list.files(file.path(workdir,"demo_dataset",opt$glds,"Metadata"),pattern = "*ISA.zip",full.names = FALSE )
 opt$isafile$datapath <- list.files(file.path(workdir,"demo_dataset",opt$glds,"Metadata"),pattern = "*ISA.zip",full.names = TRUE )
 
@@ -132,7 +132,7 @@ str(opt)
 
 ```{r eval=(grepl("\\.annotation.tar.gz$", opt[["probefile"]][["name"]])), include=FALSE}
 ### Get annotations for probe ids
-database <- sub('\\.tar.gz$', '', opt[["probefile"]][["name"]]) 
+database <- sub('\\.annotation.tar.gz$', '', opt[["probefile"]][["name"]]) 
 if(!require(database, character.only=TRUE)) {
   BiocManager::install(database, ask = FALSE)
 }
@@ -232,11 +232,11 @@ width <- 2000
 png(filename = file.path(path,"rawPlotMA.png"), width = width, height = ceiling(width/4)*printrows)
 par(mfrow = c(printrows,4),mar=c(5,5,5,5))
 for (i in 1:count){
-  oligo::MAplot(raw, pairs=FALSE, which=count)
+  oligo::MAplot(raw,which=i, pairs=FALSE)
   }
 invisible(dev.off())
 for (i in 1:count){
-  oligo::MAplot(raw, pairs=FALSE, which=count)
+  oligo::MAplot(raw,which=i, pairs=FALSE)
   }
 
 rm(path,printrows,width,count,i)
@@ -252,11 +252,11 @@ width <- 2000
 png(filename = file.path(path,"rawPlotMA.png"), width = width, height = ceiling(width/4)*printrows)
 par(mfrow = c(printrows,4),mar=c(5,5,5,5))
 for (i in 1:count){
-  plotMD(raw, column = count, xlab = "Average log-expression", ylab = "log-fold-change", main = colnames(raw)[count])
+  plotMD(raw, column = i, xlab = "Average log-expression", ylab = "log-fold-change", main = colnames(raw)[i])
   }
 invisible(dev.off())
 for (i in 1:count){
-  plotMD(raw, column = count, xlab = "Average log-expression", ylab = "log-fold-change", main = colnames(raw)[count])
+  plotMD(raw, column = i, xlab = "Average log-expression", ylab = "log-fold-change", main = colnames(raw)[i])
   }
 
 rm(path,printrows,width,count,i)
@@ -266,23 +266,32 @@ rm(path,printrows,width,count,i)
 # Create Array Info File
 path <- file.path(workdir,"Processed_Data",opt$glds,"00-RawData","QC_Repports")
 setwd(path)
-write.table(as.data.frame(opt[1:(length(opt)-3)]),file = "arrayInfo.txt", quote = FALSE)
+
+
+fileConn<-file("arrayInfo.txt")
+try(writeLines(c(raw@manufacturer,raw@annotation), fileConn))
+close(fileConn)
 ```
 
 ## Raw Data Density Plot
 ```{r eval=(plots == "OLIGO"), echo=(plots == "OLIGO")}
 path <- file.path(workdir,"Processed_Data",opt$glds,"00-RawData","QC_Repports")
 setwd(path)
+count <- dim(targets$t1)[1]
 if (opt$format == "Affymetrix ST"){
-  oligo::hist(raw, main = "Raw Data Density Distribution", target="probeset")
-  png(file = "rawDensityDistributions.png")
-  oligo::hist(raw, main = "Raw Data Density Distribution", target="probeset")
+  oligo::hist(raw, main = paste0(opt$glds," Raw Intensity Distributions"), target="probeset",xlab="log2 Intentisty",ylab="Density",col=rainbow(count),lty=1)
+  legend("topright",legend=targets$t1$SampleName,fill = rainbow(count))
+  png(file = "rawDensityDistributions.png", width = 1000, height = 800)
+  oligo::hist(raw, main = paste0(opt$glds," Raw Intensity Distributions"), target="probeset",xlab="log2 Intentisty",ylab="Density",col=rainbow(count),lty=1)
+  legend("topright",legend=targets$t1$SampleName,fill = rainbow(count))
   invisible(dev.off())
   
 }else{
-  oligo::hist(raw, main = "Raw Data Density Distribution")
-  png(file = "rawDensityDistributions.png")
-  oligo::hist(raw, main = "Raw Data Density Distribution")
+  oligo::hist(raw, main = paste0(opt$glds," Raw Intensity Distributions"),xlab="log2 Intentisty",ylab="Density",col=rainbow(count),lty=1)
+  legend("topright",legend=targets$t1$SampleName,fill = rainbow(count))
+  png(file = "rawDensityDistributions.png", width = 1000, height = 800)
+  oligo::hist(raw, main = paste0(opt$glds," Raw Intensity Distributions"),xlab="log2 Intentisty",ylab="Density",col=rainbow(count),lty=1)
+  legend("topright",legend=targets$t1$SampleName,fill = rainbow(count))
   invisible(dev.off())
   
 }
@@ -381,12 +390,13 @@ setwd(path)
 count <- dim(targets$t1)[1]
 printrows <- ceiling(count/4)
 width <- 2000
-png(file = "images.png", width = width, height = ceiling(width/4)*printrows)
-par(mfrow = c(printrows,4),mar=c(5,5,5,5))
+#par(mfrow = c(printrows,4),mar=c(5,5,5,5))
 for (i in 1:count){
+  png(file = paste0(targets$t1$SampleName[i],".png"), width = width, height = ceiling(width/4)*printrows)
   oligo::image(raw, transfo=log2, which=i)
+  invisible(dev.off())
   }
-invisible(dev.off())
+
 for (i in 1:count){
   oligo::image(raw, transfo=log2,which=i)
   }
@@ -458,7 +468,7 @@ setwd(file.path(workdir,"Processed_Data",opt$glds,"01-NormalizedData"))
 data <- data[data$genes$ControlType == 0,]
 
 expression<-cbind(data$genes$ProbeName,expression)
-write.csv(expression,"normalized.txt",quote=FALSE, append=FALSE)
+write.table(expression,"normalized.txt",quote=FALSE, append=FALSE, sep = "\t")
 
 ```
 ```{r eval=(plots == "OLIGO"),echo=(plots == "OLIGO")}
@@ -466,7 +476,7 @@ write.csv(expression,"normalized.txt",quote=FALSE, append=FALSE)
 dir.create(file.path(workdir,"Processed_Data",opt$glds,"01-NormalizedData"), showWarnings = FALSE)
 setwd(file.path(workdir,"Processed_Data",opt$glds,"01-NormalizedData"))
 expression <- data.frame(Biobase::exprs(data))
-write.csv(expression,"normalized.txt",quote=FALSE, append=FALSE)
+write.table(expression,"normalized.txt",quote=FALSE, append=FALSE, sep = "\t", col.names=NA)
 
 ```
 
@@ -530,13 +540,14 @@ string_map<-string_db$map(annotation,"REFSEQ",removeUnmappedRows = FALSE, takeFi
 annotation$STRING_ID <- string_map$STRING_id
 rm(string_map,string_db)
 })
-rm(keytype,keys,database)
+rm(keytype,keys)
 ```
+
 ```{r}
 ### Generate normalized annotated expression text file
 setwd(file.path(workdir,"Processed_Data",opt$glds,"01-NormalizedData"))
 expression <- cbind(annotation,expression)
-write.csv(expression,"normalized-annotated.txt",quote=FALSE, append = FALSE)
+write.table(expression,"normalized-annotated.txt",quote=FALSE, append = FALSE, row.names = FALSE, sep = "\t")
 
 ```
 ```{r eval=(plots == "OLIGO"),echo=(plots == "OLIGO")}
@@ -551,6 +562,7 @@ targets$t3 <- targets$t3[order(index),]
 
 rm(index)
 ```
+
 ```{r eval=(plots == "OLIGO"),echo=(plots == "OLIGO"),message=FALSE, warning=FALSE}
 ### Annotate the expression set object and save as a file
 setwd(file.path(workdir,"Processed_Data",opt$glds,"01-NormalizedData"))
@@ -615,7 +627,7 @@ rm(printrows,count,width,i)
   setwd(path)
   count <- dim(targets$t1)[1]
   ########## Create Expression Density Plots
-png(filename = file.path(path,"normDensityDistributions.png"))
+png(filename = file.path(path,"normDensityDistributions.png"), width = 1000, height = 800)
 oligo::hist(data,transfo=log2, nsample=10000,main=paste0(opt$glds," Normalized Intensity Distributions"),xlab="log2 Intentisty",ylab="Density",col=rainbow(count),lty=1)
 legend("topright",legend=targets$t1$SampleName,fill = rainbow(count))
 invisible(dev.off())
@@ -698,9 +710,12 @@ try({data.filt <- genefilter::nsFilter(data, require.entrez=(opt$filter_nonannot
     filterByQuantile=TRUE, feature.exclude="^AFFX")
 cat("Probe Aggregation Summary \n")
 str(data.filt$filter.log)
+filter.log <- data.filt$filter.log
+
 data.filt <- data.filt$eset
 annotation_stats$gene_level_features <-dim(data.filt@featureData@data)[1]})
-
+annotation_stats$numDupsRemoved <- filter.log$numDupsRemoved
+annotation_stats$numRemoved.ACCNUM <- filter.log$numRemoved.ACCNUM
 
 ```
 
@@ -794,7 +809,12 @@ fit <- fit[keep,] # filter out probes below cutoff expression level
 annotation_stats$expressed_genes <- dim(fit$genes)[1]
 path <- file.path(workdir,"Processed_Data",opt$glds,"01-NormalizedData","QC_Repports")
 setwd(path)
-write.table(annotation_stats,file = "annotReport.txt", quote = FALSE)
+
+
+
+fileConn<-file("annotReport.txt")
+writeLines(c("This microarray experiment was annotated with the R package: ",raw@annotation, "\nUnmapped probes removed: ", annotation_stats$numRemoved.ACCNUM, "\nDuplicated probes removed: ", annotation_stats$numDupsRemoved, "\nAnnotated probes remaining: ",annotation_stats$gene_level_features), fileConn)
+close(fileConn)
 rm(hist_res,keep,CutOff,path)
 ```
 
@@ -806,7 +826,7 @@ contrasts<-c(paste(combos[1,],combos[2,],sep = "-"),paste(combos[2,],combos[1,],
 contrast.names <-c(paste(combos.names[1,],combos.names[2,],sep = "v"),paste(combos.names[2,],combos.names[1,],sep = "v")) # format combinations for output table file names
   
   
-cont.matrix <- makeContrasts(contrasts = contrasts,levels=design)
+cont.matrix <- -1*makeContrasts(contrasts = contrasts,levels=design)
 
 contrast.fit <- contrasts.fit(fit, cont.matrix)
 contrast.fit <- eBayes(contrast.fit)
@@ -818,7 +838,7 @@ try({
   colnames(summary)<-c("CONTRAST","REGULATION","GENE COUNT SIG")
   DT::datatable(summary, caption = "Summary of Differentially Regulated Genes (P<=05)")
 })
-rm(combos,combos.names,cont.matrix)
+#rm(combos,combos.names,cont.matrix)
 ```
 
 ```{r}
@@ -830,15 +850,19 @@ setwd(file.path(workdir,"Processed_Data",opt$glds,"02-Limma_DGE"))
 output_table <- fit$genes
 reduced_output_table <- fit$genes
 
+expr <- as.data.frame(data.filt@assayData$exprs[rownames(data.filt@assayData$exprs) %in% rownames(fit$genes),])
+output_table <- cbind(output_table,expr)
+reduced_output_table <- cbind(reduced_output_table,expr)
+
 # add all sample mean column
 output_table$All.mean <- fit$Amean
 reduced_output_table$All.mean <- fit$Amean
 # add all sample stdev column
-output_table$All.stdev <- fit$s2.post
-reduced_output_table$All.stdev <- fit$s2.post
+output_table$All.stdev <- contrast.fit$s2.post
+reduced_output_table$All.stdev <- contrast.fit$s2.post
 # add F statistic p-value (similar to ANOVA p-value) column
-output_table$F.p.value <- fit$F.p.value
-reduced_output_table$F.p.value <- fit$F.p.value
+output_table$F.p.value <- contrast.fit$F.p.value
+reduced_output_table$F.p.value <- contrast.fit$F.p.value
 
 uu<- unique(targets$t2$Group)
 
@@ -872,10 +896,26 @@ for (i in 1:length(contrasts)){
   colnames(table)<-paste(colnames(table),contrast.names[i],sep = "_")
   output_table<-cbind(output_table,table)
   reduced_output_table<-cbind(reduced_output_table,table.reduced)
-  }
+}
+
+### For cases with single replicates
+# output_table$All.stdev <- apply(fit$coefficients,1,sd)
+# reduced_output_table$All.stdev <- apply(fit$coefficients,1,sd)
+# output_table$F.p.value <- t(apply(fit$coefficients,1,function (x) pf(x,1,1)))[,1]
+# reduced_output_table$F.p.value <- t(apply(fit$coefficients,1,function (x) pf(x,1,1)))[,1]
+# table <- contrast.fit$coefficients
+# colnames(table)<-contrast.names
+# tab1<-table
+# tab2<-sign(table)
+# colnames(tab1)<-paste("Log2fc",colnames(table),sep = "_")
+# colnames(tab2)<-paste("Updown",colnames(table),sep = "_")
+# output_table<-cbind(output_table,tab1,tab2)
+# reduced_output_table<-cbind(reduced_output_table,tab1)
+
 #rm(i,top,table,table.reduced)
 
 # Export DGE Output Data Tables
+setwd(file.path(workdir,"Processed_Data",opt$glds,"02-Limma_DGE"))
 write.csv(reduced_output_table,"differential_expression.csv", row.names = FALSE)
 write.csv(output_table,"visualization_output_table.csv", row.names = FALSE)
 contrast.output <- contrast.fit$contrasts
@@ -883,7 +923,7 @@ row.names(contrast.output)<-uu
 colnames(contrast.output)<-contrast.names
 write.csv(contrast.output,"contrasts.csv")
 
-rm (uu,group__,fit.index,fit.groups,fit.group.names,contrasts,contrast.names,targets3,targets2)
+#rm (uu,group__,fit.index,fit.groups,fit.group.names,contrasts,contrast.names)
 ```
 
 ```{r include=FALSE}
