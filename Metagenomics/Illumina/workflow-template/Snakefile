@@ -546,8 +546,8 @@ rule run_humann3:
     conda:
         "envs/humann3.yaml"
     input:
-        R1 = config["filtered_reads_dir"] + "{ID}" + config["trimmed_R1_suffix"],
-        R2 = config["filtered_reads_dir"] + "{ID}" + config["trimmed_R2_suffix"],
+        R1 = config["filtered_reads_dir"] + "{ID}" + config["filtered_R1_suffix"],
+        R2 = config["filtered_reads_dir"] + "{ID}" + config["filtered_R2_suffix"],
         chocophlan_db_trigger = config["REF_DB_ROOT_DIR"] + config["HUMANN3_DBS_DIR"] + "/" + config["HUMANN3_CHOCOPHLAN_TRIGGER_FILE"],
         uniref_db_trigger = config["REF_DB_ROOT_DIR"] + config["HUMANN3_DBS_DIR"] + "/" + config["HUMANN3_UNIREF_TRIGGER_FILE"],
         utility_db_trigger = config["REF_DB_ROOT_DIR"] + config["HUMANN3_DBS_DIR"] + "/" + config["HUMANN3_UTILITY_MAPPING_TRIGGER_FILE"],
@@ -768,8 +768,8 @@ rule run_mapping:
         "envs/mapping.yaml"
     input:
         assembly = config["assemblies_dir"] + "{ID}-assembly.fasta",
-        R1 = config["filtered_reads_dir"] + "{ID}" + config["trimmed_R1_suffix"],
-        R2 = config["filtered_reads_dir"] + "{ID}" + config["trimmed_R2_suffix"]
+        R1 = config["filtered_reads_dir"] + "{ID}" + config["filtered_R1_suffix"],
+        R2 = config["filtered_reads_dir"] + "{ID}" + config["filtered_R2_suffix"]
     params:
         index = config["mapping_dir"] + "{ID}-index",
         mapping_info = config["mapping_dir"] + "{ID}-mapping-info.txt",
@@ -942,8 +942,8 @@ rule assemble:
     conda:
         "envs/megahit.yaml"
     input:
-        R1 = config["filtered_reads_dir"] + "{ID}" + config["trimmed_R1_suffix"],
-        R2 = config["filtered_reads_dir"] + "{ID}" + config["trimmed_R2_suffix"]
+        R1 = config["filtered_reads_dir"] + "{ID}" + config["filtered_R1_suffix"],
+        R2 = config["filtered_reads_dir"] + "{ID}" + config["filtered_R2_suffix"]
     params:
         assemblies_dir = config["assemblies_dir"],
         num_threads = config["num_threads"],
@@ -978,8 +978,8 @@ rule filtered_multiqc:
     conda:
         "envs/qc.yaml"
     input:
-        expand(config["filtered_reads_dir"] + "{ID}" + config["trimmed_R1_suffix"].rsplit(".", 2)[0] + "_fastqc.zip", ID = sample_ID_list),
-        expand(config["filtered_reads_dir"] + "{ID}" + config["trimmed_R2_suffix"].rsplit(".", 2)[0] + "_fastqc.zip", ID = sample_ID_list)
+        expand(config["filtered_reads_dir"] + "{ID}" + config["filtered_R1_suffix"].rsplit(".", 2)[0] + "_fastqc.zip", ID = sample_ID_list),
+        expand(config["filtered_reads_dir"] + "{ID}" + config["filtered_R2_suffix"].rsplit(".", 2)[0] + "_fastqc.zip", ID = sample_ID_list)
     params:
         fastqc_out_dir = config["fastqc_out_dir"],
         filtered_reads_dir = config["filtered_reads_dir"]
@@ -1002,11 +1002,11 @@ rule filtered_fastqc:
     conda:
         "envs/qc.yaml"
     input:
-        config["filtered_reads_dir"] + "{ID}" + config["trimmed_R1_suffix"],
-        config["filtered_reads_dir"] + "{ID}" + config["trimmed_R2_suffix"]
+        config["filtered_reads_dir"] + "{ID}" + config["filtered_R1_suffix"],
+        config["filtered_reads_dir"] + "{ID}" + config["filtered_R2_suffix"]
     output:
-        config["filtered_reads_dir"] + "{ID}" + config["trimmed_R1_suffix"].rsplit(".", 2)[0] + "_fastqc.zip",
-        config["filtered_reads_dir"] + "{ID}" + config["trimmed_R2_suffix"].rsplit(".", 2)[0] + "_fastqc.zip"
+        config["filtered_reads_dir"] + "{ID}" + config["filtered_R1_suffix"].rsplit(".", 2)[0] + "_fastqc.zip",
+        config["filtered_reads_dir"] + "{ID}" + config["filtered_R2_suffix"].rsplit(".", 2)[0] + "_fastqc.zip"
     shell:
         """
         fastqc {input} -t 2 -q
@@ -1024,8 +1024,8 @@ rule bbduk:
         in1 = config["raw_reads_dir"] + "{ID}" + config["raw_R1_suffix"],
         in2 = config["raw_reads_dir"] + "{ID}" + config["raw_R2_suffix"]
     output:
-        out1 = config["filtered_reads_dir"] + "{ID}" + config["trimmed_R1_suffix"],
-        out2 = config["filtered_reads_dir"] + "{ID}" + config["trimmed_R2_suffix"]
+        out1 = config["filtered_reads_dir"] + "{ID}" + config["filtered_R1_suffix"],
+        out2 = config["filtered_reads_dir"] + "{ID}" + config["filtered_R2_suffix"]
     log:
         config["logs_dir"] + "bbduk-{ID}.log"
     shell:

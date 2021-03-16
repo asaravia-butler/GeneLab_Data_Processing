@@ -66,10 +66,10 @@ maximum_estimated_strain_heterogeneity:
     50
 
 ## quality trimmed/filtered suffixes
-trimmed_R1_suffix:
-    "_R1_trimmed.fastq.gz"
-trimmed_R2_suffix:
-    "_R2_trimmed.fastq.gz"
+filtered_R1_suffix:
+    "_R1_filtered.fastq.gz"
+filtered_R2_suffix:
+    "_R2_filtered.fastq.gz"
 
 ## output directories (all relative to processing directory, will be created)
 fastqc_out_dir:
