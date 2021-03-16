@@ -13,7 +13,7 @@
 
 ## single-column file with unique sample identifiers:
 sample_info_file:
-    "unique-sample-names.txt"
+    "unique-sample-IDs.txt"
 
 ## input reads directory (can be relative to workflow directory, or needs to be full path)
 raw_reads_dir:
