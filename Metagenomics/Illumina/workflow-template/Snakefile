@@ -910,6 +910,10 @@ rule call_genes:
 
             prodigal -q -c -p meta -a {output.AA} -d {output.nt} -f gff -o {output.gff} -i {input.assembly} > {log} 2>&1
 
+            # removing line-wraps
+            bit-remove-wraps {output.AA} > {output.AA}.tmp 2> /dev/null && mv {output.AA}.tmp {output.AA}
+            bit-remove-wraps {output.nt} > {output.nt}.tmp 2> /dev/null && mv {output.nt}.tmp {output.nt}
+
         else
 
             touch {output}
